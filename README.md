@@ -76,3 +76,6 @@ you are done.
 - **Android**: Kotlin, Hilt (DI), Coroutines, kotlinx.serialization, NanoHTTPD, SAF.
 - **Web**: React + TypeScript, Vite, Pico.css, react-i18next (RU/EN).
 - minSdk 26, targetSdk 34.
+
+## License
+[MIT](LICENSE) © Sergei Kharin
