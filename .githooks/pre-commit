@@ -1,0 +1,36 @@
+#!/bin/sh
+# Blocks the commit unless both projects build cleanly (warnings treated as
+# errors), then bumps the app version. Bypass in emergencies with --no-verify.
+set -e
+
+root="$(git rev-parse --show-toplevel)"
+cd "$root"
+
+if [ -z "$JAVA_HOME" ] && [ -d "/Applications/Android Studio.app/Contents/jbr/Contents/Home" ]; then
+    export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+fi
+
+if [ -d web/node_modules ]; then
+    echo "pre-commit: web type-check…"
+    (cd web && npm run --silent type-check)
+else
+    echo "pre-commit: skipping web check (web/node_modules missing)"
+fi
+
+echo "pre-commit: Android compile + unit tests (warnings as errors)…"
+./gradlew --quiet -PstrictBuild -PskipWeb compileDebugKotlin testDebugUnitTest
+
+# Build is clean — bump versionCode and the patch of versionName, then stage it.
+props="$root/version.properties"
+[ -f "$props" ] || exit 0
+code=$(sed -n 's/^versionCode=//p' "$props")
+name=$(sed -n 's/^versionName=//p' "$props")
+[ -n "$code" ] && [ -n "$name" ] || exit 0
+
+major=${name%%.*}
+rest=${name#*.}
+minor=${rest%%.*}
+patch=${rest#*.}
+
+printf 'versionCode=%s\nversionName=%s\n' "$((code + 1))" "$major.$minor.$((patch + 1))" > "$props"
+git add "$props"

@@ -1,0 +1,51 @@
+{
+  "app": {
+    "title": "Mini Webserver",
+    "subtitle": "Загрузка файлов на плеер по Wi-Fi."
+  },
+  "folders": {
+    "label": "Папка назначения",
+    "none": "Нет выданных папок. Откройте приложение на плеере и добавьте папку."
+  },
+  "storage": {
+    "internal": "Внутр.",
+    "sd": "SD"
+  },
+  "content": {
+    "title": "Содержимое папки"
+  },
+  "search": {
+    "placeholder": "Поиск по всей выбранной папке…"
+  },
+  "newFolder": {
+    "placeholder": "Имя новой папки",
+    "create": "Создать папку"
+  },
+  "upload": {
+    "drop": "Перетащите файлы сюда или нажмите",
+    "progress": "Загрузка {{current}} из {{total}}: {{name}}",
+    "done": "Готово: загружено {{done}} из {{total}}",
+    "errors": " (ошибок: {{failed}})"
+  },
+  "list": {
+    "loading": "Загрузка…",
+    "empty": "пусто",
+    "notFound": "Ничего не найдено",
+    "root": "корень",
+    "up": ".."
+  },
+  "entry": {
+    "delete": "Удалить",
+    "confirmDelete": "Удалить «{{name}}»?"
+  },
+  "errors": {
+    "folder_not_granted": "Папка не выбрана или доступ отозван",
+    "no_file": "Файл не передан",
+    "create_failed": "Не удалось создать файл",
+    "mkdir_empty_name": "Пустое имя папки",
+    "mkdir_failed": "Не удалось создать папку",
+    "delete_no_name": "Не указан файл",
+    "delete_failed": "Не удалось удалить",
+    "unknown": "Произошла ошибка"
+  }
+}

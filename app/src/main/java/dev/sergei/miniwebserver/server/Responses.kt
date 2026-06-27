@@ -1,0 +1,48 @@
+package dev.sergei.miniwebserver.server
+
+import dev.sergei.miniwebserver.domain.model.StorageError
+import dev.sergei.miniwebserver.domain.util.splitPath
+import fi.iki.elonen.NanoHTTPD.IHTTPSession
+import fi.iki.elonen.NanoHTTPD.Response
+import fi.iki.elonen.NanoHTTPD.newFixedLengthResponse
+import java.net.URLDecoder
+
+private const val JSON_MIME = "application/json; charset=utf-8"
+
+fun jsonResponse(body: String): Response = newFixedLengthResponse(Response.Status.OK, JSON_MIME, body)
+
+fun okResponse(): Response = jsonResponse("""{"ok":true}""")
+
+fun errorResponse(error: StorageError): Response =
+    newFixedLengthResponse(statusFor(error), JSON_MIME, """{"ok":false,"error":"${error.code}"}""")
+
+private fun statusFor(error: StorageError): Response.Status =
+    when (error) {
+        StorageError.CREATE_FAILED,
+        StorageError.MKDIR_FAILED,
+        StorageError.DELETE_FAILED,
+        StorageError.UNKNOWN,
+        -> Response.Status.INTERNAL_ERROR
+        else -> Response.Status.BAD_REQUEST
+    }
+
+// Reads a parameter from the raw query string in UTF-8. NanoHTTPD decodes
+// multipart headers with the wrong charset, so file names ride in the query.
+fun queryParam(
+    session: IHTTPSession,
+    key: String,
+): String? {
+    val raw = session.queryParameterString ?: return session.parameters[key]?.firstOrNull()
+    for (pair in raw.split("&")) {
+        val separator = pair.indexOf('=')
+        if (separator <= 0) continue
+        if (URLDecoder.decode(pair.substring(0, separator), "UTF-8") == key) {
+            return URLDecoder.decode(pair.substring(separator + 1), "UTF-8")
+        }
+    }
+    return session.parameters[key]?.firstOrNull()
+}
+
+fun folderParam(session: IHTTPSession): String = queryParam(session, "folder").orEmpty()
+
+fun pathParam(session: IHTTPSession): List<String> = splitPath(queryParam(session, "path"))

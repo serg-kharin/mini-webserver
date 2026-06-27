@@ -1,0 +1,51 @@
+{
+  "app": {
+    "title": "Mini Webserver",
+    "subtitle": "Upload files to the player over Wi-Fi."
+  },
+  "folders": {
+    "label": "Destination folder",
+    "none": "No folders granted. Open the app on the player and add a folder."
+  },
+  "storage": {
+    "internal": "Internal",
+    "sd": "SD"
+  },
+  "content": {
+    "title": "Folder contents"
+  },
+  "search": {
+    "placeholder": "Search the whole selected folder…"
+  },
+  "newFolder": {
+    "placeholder": "New folder name",
+    "create": "Create folder"
+  },
+  "upload": {
+    "drop": "Drop files here or click",
+    "progress": "Uploading {{current}} of {{total}}: {{name}}",
+    "done": "Done: uploaded {{done}} of {{total}}",
+    "errors": " (failed: {{failed}})"
+  },
+  "list": {
+    "loading": "Loading…",
+    "empty": "empty",
+    "notFound": "Nothing found",
+    "root": "root",
+    "up": ".."
+  },
+  "entry": {
+    "delete": "Delete",
+    "confirmDelete": "Delete \"{{name}}\"?"
+  },
+  "errors": {
+    "folder_not_granted": "No folder selected or access revoked",
+    "no_file": "No file provided",
+    "create_failed": "Could not create file",
+    "mkdir_empty_name": "Empty folder name",
+    "mkdir_failed": "Could not create folder",
+    "delete_no_name": "No file specified",
+    "delete_failed": "Could not delete",
+    "unknown": "An error occurred"
+  }
+}

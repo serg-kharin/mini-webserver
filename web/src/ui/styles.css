@@ -1,0 +1,87 @@
+.drop {
+  border: 2px dashed var(--pico-muted-border-color);
+  border-radius: var(--pico-border-radius);
+  padding: 2.5rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+.drop.over {
+  border-color: var(--pico-primary);
+  background: var(--pico-primary-background);
+}
+
+ul.entries {
+  list-style: none;
+  padding: 0;
+}
+ul.entries li {
+  padding: 0.5rem 0.7rem;
+  border-radius: var(--pico-border-radius);
+  margin-bottom: 0.35rem;
+  background: var(--pico-card-background-color);
+}
+.entry {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.entry .name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.entry .size {
+  flex: none;
+  opacity: 0.6;
+  font-size: 0.85rem;
+}
+.entry button {
+  flex: none;
+  width: auto;
+  margin: 0;
+  padding: 0.25rem 0.7rem;
+}
+.entry.dir {
+  cursor: pointer;
+}
+
+.muted {
+  opacity: 0.6;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.app-header hgroup {
+  margin-bottom: 0;
+}
+
+.lang {
+  width: auto;
+  margin-bottom: 0;
+}
+.lang button {
+  width: auto;
+  margin-bottom: 0;
+  padding: 0.3rem 0.75rem;
+}
+
+nav[aria-label='breadcrumb'] a {
+  cursor: pointer;
+}
+.upload-item {
+  margin-bottom: 0.35rem;
+}
+.upload-item progress {
+  margin: 0.2rem 0 0;
+}
+.upload-item progress.error {
+  accent-color: var(--pico-del-color, #e53935);
+}
