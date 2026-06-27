@@ -12,16 +12,25 @@ jobs:
         working-directory: web
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-      - run: npm ci
-      - run: npm run type-check
-      - run: npm run lint
-      - run: npm run test
-      - run: npm run build
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run type-check
+      - run: pnpm run lint
+      - run: pnpm run test:coverage
+      - run: pnpm run build
+      - uses: codecov/codecov-action@v4
+        with:
+          files: web/coverage/lcov.info
+          flags: web
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   android:
     runs-on: ubuntu-latest
@@ -31,8 +40,17 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
       - uses: gradle/actions/setup-gradle@v4
-      - run: ./gradlew -PstrictBuild ktlintCheck detekt testDebugUnitTest lintDebug assembleDebug
+      - run: ./gradlew -PstrictBuild ktlintCheck detekt testDebugUnitTest koverXmlReportDebug lintDebug assembleDebug
+      - uses: codecov/codecov-action@v4
+        with:
+          files: app/build/reports/kover/reportDebug.xml
+          flags: android
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}

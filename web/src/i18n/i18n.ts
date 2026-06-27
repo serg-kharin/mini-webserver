@@ -11,7 +11,7 @@ function isSupported(value: string): value is Lang {
   return (SUPPORTED as string[]).includes(value)
 }
 
-// Returns null when no supported language can be determined, so the app asks.
+// null = couldn't pick a supported language, so the app asks
 export function detectLanguage(): Lang | null {
   const saved = localStorage.getItem(STORAGE_KEY)
   if (saved && isSupported(saved)) return saved

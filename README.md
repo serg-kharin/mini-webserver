@@ -1,12 +1,19 @@
 # Mini Webserver
 
 [![CI](https://github.com/serg-kharin/mini-webserver/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/serg-kharin/mini-webserver/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/serg-kharin/mini-webserver/branch/master/graph/badge.svg)](https://codecov.io/gh/serg-kharin/mini-webserver)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 An Android app for a music player (NW-A306 and any Android 8+): it runs a local
 HTTP server so you can upload files from a computer on the same Wi-Fi network to
 the device — including the microSD card. The web UI is React; the backend is
 Kotlin.
+
+## Security
+This server is built for **personal use**. It has **no authentication** — while it
+is running, anyone on the same Wi-Fi network can browse, upload and delete files in
+the granted folders. Only run it on networks you trust, and stop the server when
+you are done.
 
 ## Documentation
 - [Architecture](docs/ARCHITECTURE.md) — Android and web layers, boundaries, data flow.
@@ -43,20 +50,21 @@ Run the web UI in the browser against an in-memory stub of the device API — no
 device, no emulator:
 ```bash
 cd web
-npm install
-npm run dev:stub
+pnpm install
+pnpm run dev:stub
 ```
 This starts the stub API and the Vite dev server together; open the printed
 `http://localhost:5173`. The stub serves fake folders/files so you can exercise
 browsing, search, upload, create and delete. To run them separately:
-`npm run stub` and `npm run dev` in two terminals.
+`pnpm run stub` and `pnpm run dev` in two terminals.
 
 ## Building
 - The frontend (`web/`, React + Vite) is built **automatically** by a Gradle task
-  and copied into `assets` — this requires **Node** to be installed.
+  and copied into `assets` — this requires **Node** and **pnpm** to be installed.
 - Skip the frontend build (Kotlin-only iteration): `./gradlew assembleDebug -PskipWeb`.
-- Frontend on its own: `cd web && npm install && npm run build`.
-- Domain unit tests: `./gradlew testDebugUnitTest`.
+- Frontend on its own: `cd web && pnpm install && pnpm run build`.
+- Web tests + coverage: `cd web && pnpm test` / `pnpm run test:coverage`.
+- Android unit tests: `./gradlew testDebugUnitTest`.
 
 ## Git hooks
 The hooks activate automatically: the first Gradle build after cloning points git
@@ -68,12 +76,6 @@ the web type-checks and the Android module compiles with Kotlin warnings treated
 as errors and unit tests passing. On success it bumps the version in
 `version.properties` (versionCode and the patch of versionName). Bypass in an
 emergency with `git commit --no-verify`.
-
-## Security
-This server is built for **personal use**. It has **no authentication** — while it
-is running, anyone on the same Wi-Fi network can browse, upload and delete files in
-the granted folders. Only run it on networks you trust, and stop the server when
-you are done.
 
 ## Stack
 - **Android**: Kotlin, Hilt (DI), Coroutines, kotlinx.serialization, NanoHTTPD, SAF.

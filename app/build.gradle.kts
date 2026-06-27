@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.detekt)
+    alias(libs.plugins.kover)
 }
 
 val appVersion =
@@ -90,24 +91,23 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
 }
 
-// React/Vite frontend, built and copied into assets before the Android build.
-// Pass -PskipWeb to skip (e.g. when iterating on Kotlin without Node).
+// build the web app and copy it into assets (skip with -PskipWeb)
 val webRoot = rootProject.layout.projectDirectory.dir("web")
 val webAssets = layout.projectDirectory.dir("src/main/assets/web")
 val skipWeb = providers.gradleProperty("skipWeb").isPresent
-val npm = if (System.getProperty("os.name").startsWith("Windows")) "npm.cmd" else "npm"
+val pnpm = if (System.getProperty("os.name").startsWith("Windows")) "pnpm.cmd" else "pnpm"
 
 val webInstall by tasks.registering(Exec::class) {
     onlyIf { !skipWeb && !webRoot.dir("node_modules").asFile.exists() }
     workingDir = webRoot.asFile
-    commandLine(npm, "install")
+    commandLine(pnpm, "install")
 }
 
 val webBuild by tasks.registering(Exec::class) {
     onlyIf { !skipWeb }
     dependsOn(webInstall)
     workingDir = webRoot.asFile
-    commandLine(npm, "run", "build")
+    commandLine(pnpm, "run", "build")
 }
 
 val copyWeb by tasks.registering(Copy::class) {

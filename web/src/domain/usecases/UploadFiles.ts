@@ -12,7 +12,7 @@ export interface UploadSummary {
   failed: number
 }
 
-// Uploads run sequentially so progress reflects one file at a time.
+// one file at a time, so progress is per-file
 export const makeUploadFiles =
   (repo: StorageRepository) =>
   async (

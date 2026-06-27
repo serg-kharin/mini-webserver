@@ -21,6 +21,7 @@ keystore.properties
 # Web frontend (React/Vite)
 web/node_modules/
 web/dist/
+web/coverage/
 web/*.local
 npm-debug.log*
 yarn-error.log*

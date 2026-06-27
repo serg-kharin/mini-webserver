@@ -12,7 +12,7 @@ fi
 
 if [ -d web/node_modules ]; then
     echo "pre-commit: web type-check…"
-    (cd web && npm run --silent type-check)
+    (cd web && pnpm run --silent type-check)
 else
     echo "pre-commit: skipping web check (web/node_modules missing)"
 fi

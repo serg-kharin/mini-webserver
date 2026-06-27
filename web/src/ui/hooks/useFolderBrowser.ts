@@ -13,8 +13,7 @@ export function useFolderBrowser() {
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // Monotonic id: only the latest in-flight request is allowed to render, so
-  // fast navigation/search never shows a stale view.
+  // ignore stale responses so fast clicks don't render an old list
   const requestId = useRef(0)
 
   useEffect(() => {

@@ -1,55 +1,98 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import HttpStorageRepository from '@/data/HttpStorageRepository'
 
+const repo = new HttpStorageRepository('/api')
+
+function mockFetch(response: Partial<Response> & { json?: () => Promise<unknown>; text?: () => Promise<string> }) {
+  const fetchMock = vi.fn().mockResolvedValue(response)
+  vi.stubGlobal('fetch', fetchMock)
+  return fetchMock
+}
+
 describe('HttpStorageRepository', () => {
-  beforeEach(() => {
-    vi.restoreAllMocks()
+  afterEach(() => vi.restoreAllMocks())
+
+  it('maps folders and storage kinds', async () => {
+    mockFetch({
+      ok: true,
+      json: async () => [
+        { id: 'a', name: 'M', storage: 'internal' },
+        { id: 'b', name: 'M', storage: 'sd' },
+        { id: 'c', name: 'M', storage: 'weird' },
+      ],
+    })
+    const folders = await repo.getFolders()
+    expect(folders.map((f) => f.storage)).toEqual(['internal', 'sd', 'unknown'])
   })
 
-  it('maps folders and storage kind', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => [{ id: 't', name: 'Music', storage: 'sd' }],
-    })
-    vi.stubGlobal('fetch', fetchMock)
-
-    const folders = await new HttpStorageRepository('/api').getFolders()
-
-    expect(folders).toEqual([{ id: 't', name: 'Music', storage: 'sd' }])
-    expect(fetchMock).toHaveBeenCalledWith('/api/folders')
+  it('returns an empty list when folders request fails', async () => {
+    mockFetch({ ok: false })
+    expect(await repo.getFolders()).toEqual([])
   })
 
   it('encodes folder and path in the list URL', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ dirs: [], files: [] }) })
-    vi.stubGlobal('fetch', fetchMock)
-
-    await new HttpStorageRepository('/api').list('tree:internal', ['Artist', 'Album'])
-
+    const fetchMock = mockFetch({ ok: true, json: async () => ({ dirs: ['A'], files: [{ name: 'x', size: 1 }] }) })
+    const listing = await repo.list('tree:internal', ['Artist', 'Album'])
     expect(fetchMock).toHaveBeenCalledWith('/api/list?folder=tree%3Ainternal&path=Artist%2FAlbum')
+    expect(listing.dirs).toEqual(['A'])
   })
 
-  it('normalizes an unknown storage kind', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => [{ id: 't', name: 'X', storage: 'weird' }],
-    })
-    vi.stubGlobal('fetch', fetchMock)
-
-    const folders = await new HttpStorageRepository('/api').getFolders()
-
-    expect(folders[0].storage).toBe('unknown')
+  it('maps search hits', async () => {
+    mockFetch({ ok: true, json: async () => [{ name: 'x', path: 'A', dir: false, size: 2 }] })
+    const hits = await repo.search('f', 'x')
+    expect(hits[0]).toEqual({ name: 'x', path: 'A', dir: false, size: 2 })
   })
 
-  it('returns the server error code on failure', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: false,
-      status: 400,
-      text: async () => '{"ok":false,"error":"mkdir_failed"}',
-    })
-    vi.stubGlobal('fetch', fetchMock)
+  it('returns defaults when list or search fails', async () => {
+    mockFetch({ ok: false })
+    expect(await repo.list('f', [])).toEqual({ dirs: [], files: [] })
+    expect(await repo.search('f', 'x')).toEqual([])
+  })
 
-    const result = await new HttpStorageRepository('/api').createDirectory('t', [], 'New')
+  it('returns the server error code on a failed action', async () => {
+    mockFetch({ ok: false, status: 400, text: async () => '{"ok":false,"error":"mkdir_failed"}' })
+    expect(await repo.createDirectory('t', [], 'New')).toEqual({ ok: false, error: 'mkdir_failed' })
+  })
 
-    expect(result).toEqual({ ok: false, error: 'mkdir_failed' })
+  it('treats a non-JSON body as failure', async () => {
+    mockFetch({ ok: false, status: 500, text: async () => 'oops' })
+    expect(await repo.deleteEntry('t', [], 'x')).toEqual({ ok: false, error: undefined })
+  })
+})
+
+describe('HttpStorageRepository.uploadFile', () => {
+  class FakeXhr {
+    upload: Record<string, unknown> = {}
+    status = 200
+    responseText = '{"ok":true}'
+    onload: (() => void) | null = null
+    onerror: (() => void) | null = null
+    open() {}
+    send() {
+      this.onload?.()
+    }
+  }
+
+  beforeEach(() => vi.stubGlobal('XMLHttpRequest', FakeXhr))
+  afterEach(() => vi.restoreAllMocks())
+
+  it('resolves ok on a 200 response', async () => {
+    const result = await repo.uploadFile('t', [], new File(['x'], 'a.txt'))
+    expect(result).toEqual({ ok: true, error: undefined })
+  })
+
+  it('resolves an error when the request fails', async () => {
+    class ErrorXhr {
+      upload: Record<string, unknown> = {}
+      onload: (() => void) | null = null
+      onerror: (() => void) | null = null
+      open() {}
+      send() {
+        this.onerror?.()
+      }
+    }
+    vi.stubGlobal('XMLHttpRequest', ErrorXhr)
+    const result = await repo.uploadFile('t', [], new File(['x'], 'a.txt'))
+    expect(result).toEqual({ ok: false, error: 'unknown' })
   })
 })
