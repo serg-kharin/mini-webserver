@@ -1,5 +1,8 @@
 # Mini Webserver
 
+[![CI](https://github.com/serg-kharin/mini-webserver/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/serg-kharin/mini-webserver/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 An Android app for a music player (NW-A306 and any Android 8+): it runs a local
 HTTP server so you can upload files from a computer on the same Wi-Fi network to
 the device — including the microSD card. The web UI is React; the backend is
