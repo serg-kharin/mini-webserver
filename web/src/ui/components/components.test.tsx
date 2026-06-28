@@ -96,7 +96,7 @@ describe('EntryList', () => {
     expect(screen.getByText('Loading…')).toBeInTheDocument()
   })
 
-  it('opens folders and deletes files', () => {
+  it('opens folders and deletes folders and files', () => {
     const onOpenDir = vi.fn()
     const onDelete = vi.fn()
     const onUp = vi.fn()
@@ -114,7 +114,11 @@ describe('EntryList', () => {
     )
     fireEvent.click(screen.getByText(/Album/))
     expect(onOpenDir).toHaveBeenCalledWith('Album')
-    fireEvent.click(screen.getByText('Delete'))
+
+    const deletes = screen.getAllByText('Delete')
+    fireEvent.click(deletes[0])
+    expect(onDelete).toHaveBeenCalledWith('Album')
+    fireEvent.click(deletes[1])
     expect(onDelete).toHaveBeenCalledWith('a.flac')
   })
 

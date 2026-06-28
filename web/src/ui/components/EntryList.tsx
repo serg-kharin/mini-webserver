@@ -70,6 +70,15 @@ export default function EntryList({
       {listing.dirs.map((dir) => (
         <li key={`d:${dir}`} className="entry dir" onClick={() => onOpenDir(dir)}>
           <span className="name">📁 {dir}</span>
+          <button
+            className="outline secondary"
+            onClick={(e) => {
+              e.stopPropagation()
+              onDelete(dir)
+            }}
+          >
+            {t('entry.delete')}
+          </button>
         </li>
       ))}
       {listing.files.map((file) => (
