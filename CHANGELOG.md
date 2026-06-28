@@ -8,6 +8,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Versions before
 
 ## [Unreleased]
 
+## [1.0.17] - 2026-06-28
+
 ### Added
 - Footer in the web UI showing the app (APK) version and the UI bundle version,
   backed by a new `/api/version` endpoint.
@@ -50,5 +52,6 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Versions before
   (error-to-status mapping), `AssetServer` (index fallback) and
   `SafStorageRepository` (folder-grant checks).
 
-[Unreleased]: https://github.com/serg-kharin/mini-webserver/compare/v1.0.14...HEAD
+[Unreleased]: https://github.com/serg-kharin/mini-webserver/compare/v1.0.17...HEAD
+[1.0.17]: https://github.com/serg-kharin/mini-webserver/compare/v1.0.14...v1.0.17
 [1.0.14]: https://github.com/serg-kharin/mini-webserver/compare/v1.0.13...v1.0.14
