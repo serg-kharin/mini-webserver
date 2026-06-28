@@ -22,7 +22,7 @@ export default defineConfig({
     setupFiles: ['./src/test/polyfills.ts', './src/test/setup.ts'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'lcov'],
+      reporter: ['text', 'json-summary'],
       include: ['src/**/*.{ts,tsx}'],
       exclude: ['src/**/*.test.{ts,tsx}', 'src/main.tsx', 'src/test/**'],
       thresholds: { statements: 70, branches: 70, functions: 70, lines: 70 },

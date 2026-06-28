@@ -25,12 +25,20 @@ jobs:
       - run: pnpm run lint
       - run: pnpm run test:coverage
       - run: pnpm run build
-      - uses: codecov/codecov-action@v4
+      - run: echo "COVERAGE=$(jq '.total.lines.pct' coverage/coverage-summary.json)" >> "$GITHUB_ENV"
+      - name: Update coverage badge
+        if: github.ref == 'refs/heads/master'
+        continue-on-error: true
+        uses: schneegans/dynamic-badges-action@v1.7.0
         with:
-          files: web/coverage/lcov.info
-          flags: web
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: 339b548f7cbf02443e36f6ecfe02969a
+          filename: mini-webserver-coverage.json
+          label: coverage
+          message: ${{ env.COVERAGE }}%
+          valColorRange: ${{ env.COVERAGE }}
+          minColorRange: 50
+          maxColorRange: 90
 
   android:
     runs-on: ubuntu-latest
@@ -47,10 +55,4 @@ jobs:
         with:
           node-version: 24
       - uses: gradle/actions/setup-gradle@v4
-      - run: ./gradlew -PstrictBuild ktlintCheck detekt testDebugUnitTest koverXmlReportDebug lintDebug assembleDebug
-      - uses: codecov/codecov-action@v4
-        with:
-          files: app/build/reports/kover/reportDebug.xml
-          flags: android
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
+      - run: ./gradlew -PstrictBuild ktlintCheck detekt testDebugUnitTest lintDebug assembleDebug

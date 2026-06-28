@@ -1,7 +1,7 @@
 # Mini Webserver
 
 [![CI](https://github.com/serg-kharin/mini-webserver/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/serg-kharin/mini-webserver/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/serg-kharin/mini-webserver/branch/master/graph/badge.svg)](https://codecov.io/gh/serg-kharin/mini-webserver)
+[![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/serg-kharin/339b548f7cbf02443e36f6ecfe02969a/raw/mini-webserver-coverage.json)](https://github.com/serg-kharin/mini-webserver/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 An Android app for a music player (NW-A306 and any Android 8+): it runs a local
