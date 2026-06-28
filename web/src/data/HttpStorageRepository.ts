@@ -12,6 +12,7 @@ const Endpoint = {
   delete: '/delete',
   exists: '/exists',
   download: '/download',
+  version: '/version',
 } as const
 
 const Param = {
@@ -46,6 +47,9 @@ interface ResultDto {
 }
 interface ExistsDto {
   exists?: boolean
+}
+interface VersionDto {
+  app?: string
 }
 
 // The server returns machine-readable error codes (no localized text); the UI
@@ -103,6 +107,17 @@ export default class HttpStorageRepository implements StorageRepository {
 
   downloadUrl(folderId: string, path: string[], name: string): string {
     return this.url(Endpoint.download, { ...locate(folderId, path), [Param.name]: name })
+  }
+
+  async serverVersion(): Promise<string> {
+    try {
+      const r = await fetch(this.url(Endpoint.version), { headers: REQUEST_HEADERS })
+      if (!r.ok) return ''
+      const d = (await r.json()) as VersionDto
+      return d.app ?? ''
+    } catch {
+      return ''
+    }
   }
 
   uploadFile(

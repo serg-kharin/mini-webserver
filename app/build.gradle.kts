@@ -25,6 +25,11 @@ android {
     namespace = "dev.sergei.miniwebserver"
     compileSdk = 34
 
+    buildFeatures {
+        // Exposes VERSION_NAME so the server can report the app version.
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "dev.sergei.miniwebserver"
         minSdk = 26

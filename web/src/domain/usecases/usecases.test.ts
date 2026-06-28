@@ -6,6 +6,7 @@ import { makeCreateDirectory } from '@/domain/usecases/CreateDirectory'
 import { makeDeleteEntry } from '@/domain/usecases/DeleteEntry'
 import { makeUploadFiles } from '@/domain/usecases/UploadFiles'
 import { makeDownloadUrl } from '@/domain/usecases/DownloadUrl'
+import { makeGetServerVersion } from '@/domain/usecases/GetServerVersion'
 import type { StorageRepository } from '@/domain/repositories/StorageRepository'
 
 const repo = (over: Partial<StorageRepository> = {}): StorageRepository => ({
@@ -16,6 +17,7 @@ const repo = (over: Partial<StorageRepository> = {}): StorageRepository => ({
   deleteEntry: vi.fn(async () => ({ ok: true })),
   exists: vi.fn(async () => false),
   downloadUrl: vi.fn(() => '/api/download'),
+  serverVersion: vi.fn(async () => '1.2.3'),
   uploadFile: vi.fn(async () => ({ ok: true })),
   ...over,
 })
@@ -37,6 +39,12 @@ describe('use cases', () => {
     const r = repo()
     makeDownloadUrl(r)('f', ['a'], 'song.flac')
     expect(r.downloadUrl).toHaveBeenCalledWith('f', ['a'], 'song.flac')
+  })
+
+  it('getServerVersion delegates to the repository', async () => {
+    const r = repo()
+    expect(await makeGetServerVersion(r)()).toBe('1.2.3')
+    expect(r.serverVersion).toHaveBeenCalled()
   })
 
   it('uploadFiles reports per-file callbacks and a summary', async () => {

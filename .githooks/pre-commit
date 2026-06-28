@@ -32,5 +32,12 @@ rest=${name#*.}
 minor=${rest%%.*}
 patch=${rest#*.}
 
-printf 'versionCode=%s\nversionName=%s\n' "$((code + 1))" "$major.$minor.$((patch + 1))" > "$props"
+newname="$major.$minor.$((patch + 1))"
+printf 'versionCode=%s\nversionName=%s\n' "$((code + 1))" "$newname" > "$props"
 git add "$props"
+
+# Keep the web UI version in lockstep so the footer shows a matching number.
+if [ -f web/package.json ]; then
+    node -e "const f='web/package.json';const fs=require('fs');const p=JSON.parse(fs.readFileSync(f));p.version=process.argv[1];fs.writeFileSync(f,JSON.stringify(p,null,2)+'\n')" "$newname"
+    git add web/package.json
+fi

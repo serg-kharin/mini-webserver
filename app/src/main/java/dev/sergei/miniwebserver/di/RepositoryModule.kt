@@ -4,8 +4,10 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dev.sergei.miniwebserver.data.AndroidAppInfoProvider
 import dev.sergei.miniwebserver.data.LocalNetworkAddressProvider
 import dev.sergei.miniwebserver.data.SafStorageRepository
+import dev.sergei.miniwebserver.domain.app.AppInfoProvider
 import dev.sergei.miniwebserver.domain.net.NetworkAddressProvider
 import dev.sergei.miniwebserver.domain.repository.StorageRepository
 
@@ -17,4 +19,7 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindNetworkAddressProvider(impl: LocalNetworkAddressProvider): NetworkAddressProvider
+
+    @Binds
+    abstract fun bindAppInfoProvider(impl: AndroidAppInfoProvider): AppInfoProvider
 }

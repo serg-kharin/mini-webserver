@@ -86,6 +86,29 @@ export default function EntryList({
       </button>
     )
 
+  const paginate = <T,>(items: T[]) => {
+    const pageCount = Math.max(1, Math.ceil(items.length / PAGE_SIZE))
+    const current = Math.min(page, pageCount - 1)
+    return { pageCount, current, visible: items.slice(current * PAGE_SIZE, current * PAGE_SIZE + PAGE_SIZE) }
+  }
+
+  const pager = (pageCount: number, current: number) =>
+    pageCount > 1 ? (
+      <li className="pager">
+        <button className="outline" disabled={current === 0} onClick={() => setPage(current - 1)}>
+          {t('list.prev')}
+        </button>
+        <span className="muted">{t('list.page', { page: current + 1, pages: pageCount })}</span>
+        <button
+          className="outline"
+          disabled={current >= pageCount - 1}
+          onClick={() => setPage(current + 1)}
+        >
+          {t('list.next')}
+        </button>
+      </li>
+    ) : null
+
   if (loading) {
     return (
       <ul className="entries">
@@ -102,10 +125,15 @@ export default function EntryList({
         </ul>
       )
     }
+    const { pageCount, current, visible } = paginate(results)
     return (
       <ul className="entries">
-        {results.map((hit, i) => (
-          <li key={i} className={hit.dir ? 'entry dir' : 'entry'} onClick={() => onOpenResult(hit)}>
+        {visible.map((hit, i) => (
+          <li
+            key={current * PAGE_SIZE + i}
+            className={hit.dir ? 'entry dir' : 'entry'}
+            onClick={() => onOpenResult(hit)}
+          >
             <span className="name">
               {hit.dir ? '📁 ' : ''}
               {hit.name}
@@ -116,6 +144,7 @@ export default function EntryList({
             {!hit.dir && downloadLink(splitPath(hit.path), hit.name)}
           </li>
         ))}
+        {pager(pageCount, current)}
       </ul>
     )
   }
@@ -125,9 +154,7 @@ export default function EntryList({
     ...listing.dirs.map((name) => ({ kind: 'dir' as const, name, size: 0 })),
     ...listing.files.map((f) => ({ kind: 'file' as const, name: f.name, size: f.size })),
   ]
-  const pageCount = Math.max(1, Math.ceil(entries.length / PAGE_SIZE))
-  const current = Math.min(page, pageCount - 1)
-  const visible = entries.slice(current * PAGE_SIZE, current * PAGE_SIZE + PAGE_SIZE)
+  const { pageCount, current, visible } = paginate(entries)
 
   return (
     <ul className="entries">
@@ -152,21 +179,7 @@ export default function EntryList({
         ),
       )}
       {isEmpty && <li className="muted">{t('list.empty')}</li>}
-      {pageCount > 1 && (
-        <li className="pager">
-          <button className="outline" disabled={current === 0} onClick={() => setPage(current - 1)}>
-            {t('list.prev')}
-          </button>
-          <span className="muted">{t('list.page', { page: current + 1, pages: pageCount })}</span>
-          <button
-            className="outline"
-            disabled={current >= pageCount - 1}
-            onClick={() => setPage(current + 1)}
-          >
-            {t('list.next')}
-          </button>
-        </li>
-      )}
+      {pager(pageCount, current)}
     </ul>
   )
 }

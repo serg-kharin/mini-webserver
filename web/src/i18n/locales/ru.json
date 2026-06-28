@@ -43,6 +43,10 @@
     "next": "Вперёд ›",
     "page": "{{page}} / {{pages}}"
   },
+  "footer": {
+    "app": "Приложение {{version}}",
+    "ui": "Интерфейс {{version}}"
+  },
   "entry": {
     "delete": "Удалить",
     "download": "Скачать",

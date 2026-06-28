@@ -8,6 +8,7 @@ export interface StorageRepository {
   deleteEntry(folderId: string, path: string[], name: string): Promise<ActionResult>
   exists(folderId: string, path: string[], name: string): Promise<boolean>
   downloadUrl(folderId: string, path: string[], name: string): string
+  serverVersion(): Promise<string>
   uploadFile(
     folderId: string,
     path: string[],

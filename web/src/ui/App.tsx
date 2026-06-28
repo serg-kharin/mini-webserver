@@ -12,6 +12,7 @@ import NewFolder from '@/ui/components/NewFolder'
 import Uploader from '@/ui/components/Uploader'
 import EntryList from '@/ui/components/EntryList'
 import Toast from '@/ui/components/Toast'
+import VersionFooter from '@/ui/components/VersionFooter'
 
 const TOAST_MS = 4000
 
@@ -90,6 +91,7 @@ export default function App() {
         onOpenResult={browser.openResult}
         downloadUrl={browser.downloadUrl}
       />
+      <VersionFooter />
     </>
   )
 }

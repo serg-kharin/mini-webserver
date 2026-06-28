@@ -14,6 +14,7 @@ import dev.sergei.miniwebserver.server.routes.ListRoute
 import dev.sergei.miniwebserver.server.routes.MkdirRoute
 import dev.sergei.miniwebserver.server.routes.SearchRoute
 import dev.sergei.miniwebserver.server.routes.UploadRoute
+import dev.sergei.miniwebserver.server.routes.VersionRoute
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -41,4 +42,7 @@ abstract class RouteModule {
 
     @Binds @IntoSet
     abstract fun downloadRoute(impl: DownloadRoute): ApiRoute
+
+    @Binds @IntoSet
+    abstract fun versionRoute(impl: VersionRoute): ApiRoute
 }

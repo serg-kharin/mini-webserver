@@ -12,6 +12,7 @@ export function fakeUseCases(overrides: Partial<UseCases> = {}): UseCases {
     deleteEntry: async () => ({ ok: true }),
     uploadFiles: async () => ({ total: 0, done: 0, failed: 0, conflicts: 0 }),
     downloadUrl: (_folderId, path, name) => `/api/download?path=${path.join('/')}&name=${name}`,
+    getServerVersion: async () => '1.2.3',
     ...overrides,
   }
 }

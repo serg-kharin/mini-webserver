@@ -73,6 +73,7 @@ const handlers = {
     const node = resolve(q.get('folder'), splitPath(q.get('path')))
     return { exists: !!node?.children?.[q.get('name')] }
   },
+  'GET /api/version': () => ({ app: '0.0.0-stub' }),
   'POST /api/mkdir': (q) => mutate(q, (parent, name) => (parent.children[name] = dir())),
   'POST /api/delete': (q) => mutate(q, (parent, name) => delete parent.children[name]),
   'POST /api/upload': (q, size) => {

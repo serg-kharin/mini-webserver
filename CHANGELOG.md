@@ -1,8 +1,24 @@
 # Changelog
 
 All notable changes to this project are documented here. The format is based on
-[Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions before 1.0.14
-are recorded only in the [GitHub releases](https://github.com/serg-kharin/mini-webserver/releases).
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres
+to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Versions before
+1.0.14 are recorded only in the
+[GitHub releases](https://github.com/serg-kharin/mini-webserver/releases).
+
+## [Unreleased]
+
+### Added
+- Footer in the web UI showing the app (APK) version and the UI bundle version,
+  backed by a new `/api/version` endpoint.
+- Search results are now paged 20 at a time, like the folder listing.
+- Screenshots of the app and the web interface in the README.
+
+### Changed
+- The pre-commit hook now bumps `web/package.json` in lockstep with the Android
+  version, so the UI version is no longer stuck at `1.0.0`.
+- Release notes are taken from this changelog instead of an auto-generated
+  "Full Changelog" link.
 
 ## [1.0.14] - 2026-06-28
 
@@ -33,3 +49,6 @@ are recorded only in the [GitHub releases](https://github.com/serg-kharin/mini-w
 - Added server-layer unit tests for `WebServer` (dispatch + CSRF gate), `Responses`
   (error-to-status mapping), `AssetServer` (index fallback) and
   `SafStorageRepository` (folder-grant checks).
+
+[Unreleased]: https://github.com/serg-kharin/mini-webserver/compare/v1.0.14...HEAD
+[1.0.14]: https://github.com/serg-kharin/mini-webserver/compare/v1.0.13...v1.0.14

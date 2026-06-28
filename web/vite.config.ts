@@ -1,11 +1,16 @@
+import { readFileSync } from 'node:fs'
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
+
+const pkg = JSON.parse(readFileSync(fileURLToPath(new URL('./package.json', import.meta.url)), 'utf-8'))
 
 // relative asset paths so the bundle works from any host/port; output goes to dist
 export default defineConfig({
   plugins: [react()],
   base: './',
+  // bake the UI version into the bundle so it can be shown in the footer
+  define: { __UI_VERSION__: JSON.stringify(pkg.version) },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

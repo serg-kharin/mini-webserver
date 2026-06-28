@@ -8,6 +8,8 @@ import LanguageGate from '@/ui/components/LanguageGate'
 import LanguageSwitch from '@/ui/components/LanguageSwitch'
 import EntryList from '@/ui/components/EntryList'
 import Toast from '@/ui/components/Toast'
+import VersionFooter from '@/ui/components/VersionFooter'
+import { fakeUseCases, renderWith } from '@/test/fakes'
 
 describe('FolderSelect', () => {
   it('shows storage-prefixed labels and reports changes', () => {
@@ -92,6 +94,20 @@ describe('Toast', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Boom')
     fireEvent.click(screen.getByLabelText('close'))
     expect(onClose).toHaveBeenCalled()
+  })
+})
+
+describe('VersionFooter', () => {
+  it('shows the app and UI versions', async () => {
+    renderWith(<VersionFooter />, fakeUseCases({ getServerVersion: async () => '9.9.9' }))
+    await screen.findByText(/App 9\.9\.9/)
+    expect(screen.getByText(/UI /)).toBeInTheDocument()
+  })
+
+  it('omits the app version when the server does not report one', async () => {
+    renderWith(<VersionFooter />, fakeUseCases({ getServerVersion: async () => '' }))
+    await screen.findByText(/UI /)
+    expect(screen.queryByText(/App /)).not.toBeInTheDocument()
   })
 })
 
@@ -217,6 +233,32 @@ describe('EntryList', () => {
     expect(screen.getByText('Download')).toHaveAttribute('href', '/api/download?path=Album&name=a.flac')
     fireEvent.click(screen.getByText('a.flac'))
     expect(onOpenResult).toHaveBeenCalled()
+  })
+
+  it('paginates long search results', () => {
+    const many = Array.from({ length: 25 }, (_, i) => ({
+      name: `r${i}.flac`,
+      path: 'A',
+      dir: false,
+      size: 1,
+    }))
+    render(
+      <EntryList
+        loading={false}
+        listing={{ dirs: [], files: [] }}
+        results={many}
+        path={[]}
+        onOpenDir={vi.fn()}
+        onUp={vi.fn()}
+        onDelete={vi.fn()}
+        onOpenResult={vi.fn()}
+        downloadUrl={downloadUrl}
+      />,
+    )
+    expect(screen.getByText('r0.flac')).toBeInTheDocument()
+    expect(screen.queryByText('r20.flac')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByText(/Next/))
+    expect(screen.getByText('r20.flac')).toBeInTheDocument()
   })
 
   it('renders a folder search result', () => {

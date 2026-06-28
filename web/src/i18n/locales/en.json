@@ -43,6 +43,10 @@
     "next": "Next ›",
     "page": "{{page}} / {{pages}}"
   },
+  "footer": {
+    "app": "App {{version}}",
+    "ui": "UI {{version}}"
+  },
   "entry": {
     "delete": "Delete",
     "download": "Download",

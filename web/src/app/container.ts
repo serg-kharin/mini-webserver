@@ -7,6 +7,7 @@ import { makeCreateDirectory } from '@/domain/usecases/CreateDirectory'
 import { makeDeleteEntry } from '@/domain/usecases/DeleteEntry'
 import { makeUploadFiles } from '@/domain/usecases/UploadFiles'
 import { makeDownloadUrl } from '@/domain/usecases/DownloadUrl'
+import { makeGetServerVersion } from '@/domain/usecases/GetServerVersion'
 
 export function createUseCases(repository: StorageRepository = new HttpStorageRepository('/api')) {
   return {
@@ -17,6 +18,7 @@ export function createUseCases(repository: StorageRepository = new HttpStorageRe
     deleteEntry: makeDeleteEntry(repository),
     uploadFiles: makeUploadFiles(repository),
     downloadUrl: makeDownloadUrl(repository),
+    getServerVersion: makeGetServerVersion(repository),
   }
 }
 

@@ -84,6 +84,16 @@ describe('HttpStorageRepository', () => {
       '/api/download?folder=tree%3Ainternal&path=A&name=a.flac',
     )
   })
+
+  it('reads the app version from the server', async () => {
+    mockFetch({ ok: true, json: async () => ({ app: '1.0.15' }) })
+    expect(await repo.serverVersion()).toBe('1.0.15')
+  })
+
+  it('returns an empty version when the request fails', async () => {
+    mockFetch({ ok: false })
+    expect(await repo.serverVersion()).toBe('')
+  })
 })
 
 describe('HttpStorageRepository.uploadFile', () => {

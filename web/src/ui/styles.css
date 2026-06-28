@@ -137,6 +137,14 @@ nav[aria-label='breadcrumb'] a {
   background: var(--pico-del-color, #e53935);
   color: #fff;
 }
+.app-footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--pico-muted-border-color);
+  text-align: center;
+  font-size: 0.8rem;
+}
+
 .toast .close {
   width: auto;
   margin: 0;
