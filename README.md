@@ -18,6 +18,7 @@ you are done.
 ## Documentation
 - [Architecture](docs/ARCHITECTURE.md) — Android and web layers, boundaries, data flow.
 - [Device setup](docs/DEVICE_SETUP.md) — enable USB debugging and prepare a device/emulator.
+- [Releasing](docs/RELEASE.md) — tag, build and publish a signed APK to GitHub Releases.
 
 ## How to use
 1. On the device, pick a folder (internal storage or SD card).
