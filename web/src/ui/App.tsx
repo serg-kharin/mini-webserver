@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { UNKNOWN_ERROR } from '@/domain/models/errors'
 import { detectLanguage, setLanguage, type Lang } from '@/i18n/i18n'
@@ -11,11 +11,21 @@ import SearchBar from '@/ui/components/SearchBar'
 import NewFolder from '@/ui/components/NewFolder'
 import Uploader from '@/ui/components/Uploader'
 import EntryList from '@/ui/components/EntryList'
+import Toast from '@/ui/components/Toast'
+
+const TOAST_MS = 4000
 
 export default function App() {
   const { t } = useTranslation()
   const [lang, setLang] = useState<Lang | null>(() => detectLanguage())
+  const [toast, setToast] = useState<string | null>(null)
   const browser = useFolderBrowser()
+
+  useEffect(() => {
+    if (!toast) return
+    const timer = setTimeout(() => setToast(null), TOAST_MS)
+    return () => clearTimeout(timer)
+  }, [toast])
 
   if (!lang) {
     return (
@@ -28,15 +38,16 @@ export default function App() {
     )
   }
 
+  const notifyError = (error?: string) => setToast(t(`errors.${error ?? UNKNOWN_ERROR}`))
+
   const onCreateDirectory = async (name: string) => {
     const result = await browser.createDirectory(name)
-    if (!result.ok) alert(t(`errors.${result.error ?? UNKNOWN_ERROR}`))
+    if (!result.ok) notifyError(result.error)
   }
 
   const onDeleteFile = async (name: string) => {
-    if (!confirm(t('entry.confirmDelete', { name }))) return
     const result = await browser.deleteFile(name)
-    if (!result.ok) alert(t(`errors.${result.error ?? UNKNOWN_ERROR}`))
+    if (!result.ok) notifyError(result.error)
   }
 
   return (
@@ -48,6 +59,8 @@ export default function App() {
         </hgroup>
         <LanguageSwitch />
       </header>
+
+      {toast && <Toast message={toast} onClose={() => setToast(null)} />}
 
       {browser.folders.length === 0 && <p className="muted">{t('folders.none')}</p>}
       <FolderSelect
@@ -75,6 +88,7 @@ export default function App() {
         onUp={browser.goUp}
         onDelete={onDeleteFile}
         onOpenResult={browser.openResult}
+        downloadUrl={browser.downloadUrl}
       />
     </>
   )

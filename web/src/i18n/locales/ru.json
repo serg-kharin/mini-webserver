@@ -25,17 +25,29 @@
     "drop": "Перетащите файлы сюда или нажмите",
     "progress": "Загрузка {{current}} из {{total}}: {{name}}",
     "done": "Готово: загружено {{done}} из {{total}}",
-    "errors": " (ошибок: {{failed}})"
+    "errors": " (ошибок: {{failed}})",
+    "conflictsSummary": " (уже есть: {{conflicts}})",
+    "failed": "Не удалось",
+    "retry": "Повторить",
+    "exists": "Уже существует",
+    "replace": "Заменить",
+    "skip": "Пропустить"
   },
   "list": {
     "loading": "Загрузка…",
     "empty": "пусто",
     "notFound": "Ничего не найдено",
     "root": "корень",
-    "up": ".."
+    "up": "..",
+    "prev": "‹ Назад",
+    "next": "Вперёд ›",
+    "page": "{{page}} / {{pages}}"
   },
   "entry": {
     "delete": "Удалить",
+    "download": "Скачать",
+    "confirm": "Подтвердить",
+    "cancel": "Отмена",
     "confirmDelete": "Удалить «{{name}}»?"
   },
   "errors": {
@@ -47,6 +59,7 @@
     "delete_no_name": "Не указан файл",
     "delete_failed": "Не удалось удалить",
     "upload_too_large": "Файл слишком большой",
+    "file_exists": "Файл с таким именем уже существует",
     "forbidden": "Запрос отклонён",
     "unknown": "Произошла ошибка"
   }

@@ -8,5 +8,10 @@ interface ApiRoute {
     val method: Method
     val path: String
 
+    // Whether the route needs the anti-CSRF header. Safe, read-only downloads
+    // opt out so the browser can fetch them via a plain link.
+    val requiresCsrf: Boolean
+        get() = true
+
     fun handle(session: IHTTPSession): Response
 }

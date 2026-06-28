@@ -13,9 +13,27 @@ Kotlin.
 This server is built for **personal use**. It has **no authentication** — while it
 is running, anyone on the same Wi-Fi network can browse, upload and delete files in
 the granted folders. Only run it on networks you trust, and stop the server when
-you are done.
+you are done. You can stop it from the app, from the **Stop** action in the
+notification, and it **stops itself after 30 minutes** with no requests.
+
+## Features
+- Browse granted folders with subfolder navigation and breadcrumbs; listings are
+  **paged 20 entries at a time**.
+- Upload files or whole folders (drag-and-drop), with per-file progress.
+  Successful rows clear themselves; failed ones offer **Retry**.
+- Uploading a file that already exists asks to **Replace** or **Skip** instead of
+  silently overwriting.
+- **Download** any file straight from the browser.
+- Create and delete folders and files; recursive search across the whole folder.
+- QR code with the server address.
+
+> **Upload size:** capped at **2 GB** per file. NanoHTTPD spools each upload to a
+> temp file first (on the volume with the most free space, usually the SD card)
+> before writing it to the destination, so a transfer briefly needs that much free
+> space on that volume.
 
 ## Documentation
+- [Changelog](CHANGELOG.md) — notable changes per release.
 - [Architecture](docs/ARCHITECTURE.md) — Android and web layers, boundaries, data flow.
 - [Device setup](docs/DEVICE_SETUP.md) — enable USB debugging and prepare a device/emulator.
 - [Releasing](docs/RELEASE.md) — tag, build and publish a signed APK to GitHub Releases.

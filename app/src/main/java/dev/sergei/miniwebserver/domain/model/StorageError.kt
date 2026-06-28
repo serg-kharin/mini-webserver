@@ -9,6 +9,7 @@ enum class StorageError(val code: String) {
     DELETE_NO_NAME("delete_no_name"),
     DELETE_FAILED("delete_failed"),
     UPLOAD_TOO_LARGE("upload_too_large"),
+    FILE_EXISTS("file_exists"),
     UNKNOWN("unknown"),
 }
 

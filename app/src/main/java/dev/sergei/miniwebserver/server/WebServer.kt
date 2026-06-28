@@ -1,7 +1,9 @@
 package dev.sergei.miniwebserver.server
 
 import android.util.Log
+import dev.sergei.miniwebserver.core.ActivityTracker
 import dev.sergei.miniwebserver.core.DEFAULT_PORT
+import dev.sergei.miniwebserver.data.UploadTempDirProvider
 import dev.sergei.miniwebserver.domain.model.StorageError
 import dev.sergei.miniwebserver.domain.model.StorageException
 import fi.iki.elonen.NanoHTTPD
@@ -14,16 +16,23 @@ class WebServer
     constructor(
         routes: Set<@JvmSuppressWildcards ApiRoute>,
         private val assetServer: AssetServer,
+        private val activityTracker: ActivityTracker,
+        tempDir: UploadTempDirProvider,
     ) : NanoHTTPD("0.0.0.0", DEFAULT_PORT) {
         private val table: Map<Pair<Method, String>, ApiRoute> =
             routes.associateBy { it.method to it.path }
 
-        override fun serve(session: IHTTPSession): Response =
-            try {
+        init {
+            setTempFileManagerFactory(UploadTempFiles(tempDir.dir()))
+        }
+
+        override fun serve(session: IHTTPSession): Response {
+            activityTracker.touch(System.currentTimeMillis())
+            return try {
                 val route = table[session.method to session.uri]
                 when {
                     route == null -> assetServer.serve(session.uri)
-                    !hasCsrfHeader(session) -> forbiddenResponse()
+                    route.requiresCsrf && !hasCsrfHeader(session) -> forbiddenResponse()
                     else -> route.handle(session)
                 }
             } catch (e: StorageException) {
@@ -32,4 +41,5 @@ class WebServer
                 Log.e(TAG, "Request failed: ${session.method} ${session.uri}", e)
                 errorResponse(StorageError.UNKNOWN)
             }
+        }
     }

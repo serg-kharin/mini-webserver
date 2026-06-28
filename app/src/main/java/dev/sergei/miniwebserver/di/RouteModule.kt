@@ -7,6 +7,8 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
 import dev.sergei.miniwebserver.server.ApiRoute
 import dev.sergei.miniwebserver.server.routes.DeleteRoute
+import dev.sergei.miniwebserver.server.routes.DownloadRoute
+import dev.sergei.miniwebserver.server.routes.ExistsRoute
 import dev.sergei.miniwebserver.server.routes.FoldersRoute
 import dev.sergei.miniwebserver.server.routes.ListRoute
 import dev.sergei.miniwebserver.server.routes.MkdirRoute
@@ -33,4 +35,10 @@ abstract class RouteModule {
 
     @Binds @IntoSet
     abstract fun deleteRoute(impl: DeleteRoute): ApiRoute
+
+    @Binds @IntoSet
+    abstract fun existsRoute(impl: ExistsRoute): ApiRoute
+
+    @Binds @IntoSet
+    abstract fun downloadRoute(impl: DownloadRoute): ApiRoute
 }

@@ -1,5 +1,6 @@
 package dev.sergei.miniwebserver.server.routes
 
+import dev.sergei.miniwebserver.core.MAX_UPLOAD_BYTES
 import dev.sergei.miniwebserver.domain.model.StorageError
 import dev.sergei.miniwebserver.domain.model.StorageException
 import dev.sergei.miniwebserver.domain.usecase.UploadFile
@@ -14,8 +15,6 @@ import fi.iki.elonen.NanoHTTPD.Response
 import java.io.File
 import java.io.FileInputStream
 import javax.inject.Inject
-
-private const val MAX_UPLOAD_BYTES = 4L * 1024 * 1024 * 1024
 
 class UploadRoute
     @Inject
@@ -34,8 +33,9 @@ class UploadRoute
             session.parseBody(parts)
             val tempPath = parts["file"] ?: throw StorageException(StorageError.NO_FILE)
             val name = queryParam(session, "name").orEmpty()
+            val overwrite = queryParam(session, "overwrite") == "true"
             FileInputStream(File(tempPath)).use {
-                uploadFile(folderParam(session), pathParam(session), name, it)
+                uploadFile(folderParam(session), pathParam(session), name, it, overwrite)
             }
             return okResponse()
         }

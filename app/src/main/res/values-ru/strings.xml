@@ -4,6 +4,7 @@
     <string name="notification_channel_name">Mini Webserver</string>
     <string name="notification_title">Mini Webserver запущен</string>
     <string name="notification_text">Сервер слушает порт %1$d</string>
+    <string name="notification_stop">Остановить</string>
 
     <string name="status_running">Сервер запущен — открой адрес или отсканируй QR:</string>
     <string name="status_running_no_wifi">Сервер запущен, но нет Wi-Fi адреса — подключи плеер к Wi-Fi</string>

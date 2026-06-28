@@ -64,6 +64,11 @@ android {
         // Enabled by the pre-commit hook (-PstrictBuild) so warnings block commits.
         allWarningsAsErrors = providers.gradleProperty("strictBuild").isPresent
     }
+
+    testOptions {
+        // Let android.jar stubs (e.g. Log) return defaults instead of throwing in JVM tests.
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 detekt {
@@ -87,6 +92,7 @@ dependencies {
     ksp(libs.hilt.compiler)
 
     testImplementation(libs.junit)
+    testImplementation(libs.mockk)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.runner)
 }

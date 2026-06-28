@@ -2,6 +2,7 @@ package dev.sergei.miniwebserver.domain.usecase
 
 import dev.sergei.miniwebserver.domain.model.DirListing
 import dev.sergei.miniwebserver.domain.model.Folder
+import dev.sergei.miniwebserver.domain.model.OpenFile
 import dev.sergei.miniwebserver.domain.model.SearchHit
 import dev.sergei.miniwebserver.domain.model.StorageKind
 import dev.sergei.miniwebserver.domain.repository.StorageRepository
@@ -13,6 +14,7 @@ import java.io.InputStream
 private class FakeStorageRepository : StorageRepository {
     val seededFolders = listOf(Folder("id", "Music", StorageKind.INTERNAL))
     var uploaded: Triple<String, List<String>, String>? = null
+    var uploadedOverwrite: Boolean? = null
 
     override fun getFolders() = seededFolders
 
@@ -42,13 +44,27 @@ private class FakeStorageRepository : StorageRepository {
         name: String,
     ) = Unit
 
+    override fun exists(
+        folderId: String,
+        path: List<String>,
+        name: String,
+    ) = false
+
+    override fun open(
+        folderId: String,
+        path: List<String>,
+        name: String,
+    ) = OpenFile(ByteArrayInputStream(ByteArray(0)), 0L, "application/octet-stream")
+
     override fun upload(
         folderId: String,
         path: List<String>,
         name: String,
         source: InputStream,
+        overwrite: Boolean,
     ) {
         uploaded = Triple(folderId, path, name)
+        uploadedOverwrite = overwrite
     }
 }
 
@@ -62,7 +78,8 @@ class UseCasesTest {
 
     @Test
     fun uploadFileDelegatesToRepository() {
-        UploadFile(repository)("id", listOf("Album"), "song.flac", ByteArrayInputStream(ByteArray(0)))
+        UploadFile(repository)("id", listOf("Album"), "song.flac", ByteArrayInputStream(ByteArray(0)), overwrite = true)
         assertEquals(Triple("id", listOf("Album"), "song.flac"), repository.uploaded)
+        assertEquals(true, repository.uploadedOverwrite)
     }
 }

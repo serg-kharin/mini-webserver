@@ -4,6 +4,7 @@
     <string name="notification_channel_name">Mini Webserver</string>
     <string name="notification_title">Mini Webserver is running</string>
     <string name="notification_text">Server listening on port %1$d</string>
+    <string name="notification_stop">Stop</string>
 
     <string name="status_running">Server running — open the address or scan the QR:</string>
     <string name="status_running_no_wifi">Server running, but no Wi-Fi address — connect the player to Wi-Fi</string>

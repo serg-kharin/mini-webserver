@@ -1,6 +1,7 @@
 // In-memory stub of the device HTTP API for local UI development.
 // Run with `npm run stub`; the Vite dev server proxies /api to it.
 import { createServer } from 'node:http'
+import { splitPath } from '../src/domain/util/path.ts'
 
 const PORT = 8787
 
@@ -68,13 +69,23 @@ const handlers = {
     const query = (q.get('q') ?? '').toLowerCase()
     return node && query ? search(node, query, '', []) : []
   },
+  'GET /api/exists': (q) => {
+    const node = resolve(q.get('folder'), splitPath(q.get('path')))
+    return { exists: !!node?.children?.[q.get('name')] }
+  },
   'POST /api/mkdir': (q) => mutate(q, (parent, name) => (parent.children[name] = dir())),
   'POST /api/delete': (q) => mutate(q, (parent, name) => delete parent.children[name]),
-  'POST /api/upload': (q, size) =>
-    mutate(q, (parent, name) => (parent.children[name] = file(size))),
+  'POST /api/upload': (q, size) => {
+    const parent = resolve(q.get('folder'), splitPath(q.get('path')))
+    if (!parent) return { ok: false, error: 'folder_not_granted' }
+    const name = q.get('name')
+    if (q.get('overwrite') !== 'true' && parent.children[name]) {
+      return { ok: false, error: 'file_exists' }
+    }
+    parent.children[name] = file(size)
+    return { ok: true }
+  },
 }
-
-const splitPath = (raw) => (raw ? raw.split('/').filter(Boolean) : [])
 
 const mutate = (q, apply) => {
   const parent = resolve(q.get('folder'), splitPath(q.get('path')))
@@ -83,8 +94,25 @@ const mutate = (q, apply) => {
   return { ok: true }
 }
 
+const sendDownload = (q, res) => {
+  const node = resolve(q.get('folder'), splitPath(q.get('path')))
+  const name = q.get('name')
+  const child = node?.children?.[name]
+  if (!child || child.type !== 'file') {
+    res.writeHead(404).end('{}')
+    return
+  }
+  res.setHeader('Content-Type', 'application/octet-stream')
+  res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(name)}`)
+  res.end(`stub content for ${name}`)
+}
+
 createServer((req, res) => {
   const url = new URL(req.url, `http://localhost:${PORT}`)
+  if (req.method === 'GET' && url.pathname === '/api/download') {
+    sendDownload(url.searchParams, res)
+    return
+  }
   const handler = handlers[`${req.method} ${url.pathname}`]
   res.setHeader('Content-Type', 'application/json; charset=utf-8')
   if (!handler) {

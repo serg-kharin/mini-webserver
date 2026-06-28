@@ -5,6 +5,7 @@ import android.provider.DocumentsContract
 import androidx.documentfile.provider.DocumentFile
 import dev.sergei.miniwebserver.domain.model.DirListing
 import dev.sergei.miniwebserver.domain.model.FileEntry
+import java.util.Locale
 
 private val LISTING_PROJECTION =
     arrayOf(
@@ -36,7 +37,7 @@ fun listChildren(
         }
     }
     return DirListing(
-        dirs = dirs.sortedBy { it.lowercase() },
-        files = files.sortedBy { it.name.lowercase() },
+        dirs = dirs.sortedBy { it.lowercase(Locale.ROOT) },
+        files = files.sortedBy { it.name.lowercase(Locale.ROOT) },
     )
 }

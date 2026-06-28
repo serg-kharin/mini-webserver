@@ -1,17 +1,14 @@
 package dev.sergei.miniwebserver.domain.usecase
 
 import dev.sergei.miniwebserver.domain.repository.StorageRepository
-import java.io.InputStream
 import javax.inject.Inject
 
-class UploadFile
+class FileExists
     @Inject
     constructor(private val repository: StorageRepository) {
         operator fun invoke(
             folderId: String,
             path: List<String>,
             name: String,
-            source: InputStream,
-            overwrite: Boolean,
-        ) = repository.upload(folderId, path, name, source, overwrite)
+        ): Boolean = repository.exists(folderId, path, name)
     }

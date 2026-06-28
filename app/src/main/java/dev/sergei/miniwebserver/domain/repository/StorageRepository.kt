@@ -2,6 +2,7 @@ package dev.sergei.miniwebserver.domain.repository
 
 import dev.sergei.miniwebserver.domain.model.DirListing
 import dev.sergei.miniwebserver.domain.model.Folder
+import dev.sergei.miniwebserver.domain.model.OpenFile
 import dev.sergei.miniwebserver.domain.model.SearchHit
 import java.io.InputStream
 
@@ -34,10 +35,23 @@ interface StorageRepository {
         name: String,
     )
 
+    fun exists(
+        folderId: String,
+        path: List<String>,
+        name: String,
+    ): Boolean
+
+    fun open(
+        folderId: String,
+        path: List<String>,
+        name: String,
+    ): OpenFile
+
     fun upload(
         folderId: String,
         path: List<String>,
         name: String,
         source: InputStream,
+        overwrite: Boolean,
     )
 }

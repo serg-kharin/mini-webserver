@@ -10,6 +10,8 @@ const Endpoint = {
   upload: '/upload',
   mkdir: '/mkdir',
   delete: '/delete',
+  exists: '/exists',
+  download: '/download',
 } as const
 
 const Param = {
@@ -17,6 +19,7 @@ const Param = {
   path: 'path',
   name: 'name',
   query: 'q',
+  overwrite: 'overwrite',
 } as const
 
 // Custom header the server requires; blocks cross-site (no-cors/form) requests.
@@ -40,6 +43,9 @@ interface SearchHitDto {
 interface ResultDto {
   ok?: boolean
   error?: string
+}
+interface ExistsDto {
+  exists?: boolean
 }
 
 // The server returns machine-readable error codes (no localized text); the UI
@@ -86,18 +92,31 @@ export default class HttpStorageRepository implements StorageRepository {
     return this.post(this.url(Endpoint.delete, { ...locate(folderId, path), [Param.name]: name }))
   }
 
+  async exists(folderId: string, path: string[], name: string): Promise<boolean> {
+    const r = await fetch(this.url(Endpoint.exists, { ...locate(folderId, path), [Param.name]: name }), {
+      headers: REQUEST_HEADERS,
+    })
+    if (!r.ok) return false
+    const d = (await r.json()) as ExistsDto
+    return d.exists === true
+  }
+
+  downloadUrl(folderId: string, path: string[], name: string): string {
+    return this.url(Endpoint.download, { ...locate(folderId, path), [Param.name]: name })
+  }
+
   uploadFile(
     folderId: string,
     path: string[],
     file: File,
+    overwrite: boolean,
     onProgress?: (fraction: number) => void,
   ): Promise<ActionResult> {
     return new Promise((resolve) => {
       const xhr = new XMLHttpRequest()
-      xhr.open(
-        'POST',
-        this.url(Endpoint.upload, { ...locate(folderId, path), [Param.name]: file.name }),
-      )
+      const params: Record<string, string> = { ...locate(folderId, path), [Param.name]: file.name }
+      if (overwrite) params[Param.overwrite] = 'true'
+      xhr.open('POST', this.url(Endpoint.upload, params))
       xhr.setRequestHeader('X-Requested-With', 'fetch')
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total)

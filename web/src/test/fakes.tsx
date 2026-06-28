@@ -10,7 +10,8 @@ export function fakeUseCases(overrides: Partial<UseCases> = {}): UseCases {
     searchCatalog: async () => [{ name: 'a.flac', path: 'Album', dir: false, size: 10 }],
     createDirectory: async () => ({ ok: true }),
     deleteEntry: async () => ({ ok: true }),
-    uploadFiles: async () => ({ total: 0, done: 0, failed: 0 }),
+    uploadFiles: async () => ({ total: 0, done: 0, failed: 0, conflicts: 0 }),
+    downloadUrl: (_folderId, path, name) => `/api/download?path=${path.join('/')}&name=${name}`,
     ...overrides,
   }
 }

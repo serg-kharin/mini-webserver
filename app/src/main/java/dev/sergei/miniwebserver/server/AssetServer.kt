@@ -6,6 +6,7 @@ import fi.iki.elonen.NanoHTTPD.Response
 import fi.iki.elonen.NanoHTTPD.newChunkedResponse
 import fi.iki.elonen.NanoHTTPD.newFixedLengthResponse
 import java.io.IOException
+import java.util.Locale
 import javax.inject.Inject
 
 private const val ASSET_DIR = "web"
@@ -33,7 +34,7 @@ class AssetServer
     }
 
 private fun mimeForAsset(path: String): String =
-    when (path.substringAfterLast('.', "").lowercase()) {
+    when (path.substringAfterLast('.', "").lowercase(Locale.ROOT)) {
         "html" -> "text/html; charset=utf-8"
         "js" -> "text/javascript"
         "css" -> "text/css"

@@ -7,12 +7,14 @@ import android.provider.DocumentsContract
 import android.util.Log
 import androidx.documentfile.provider.DocumentFile
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dev.sergei.miniwebserver.core.MAX_UPLOAD_BYTES
 import dev.sergei.miniwebserver.data.saf.listChildren
 import dev.sergei.miniwebserver.data.saf.resolveDir
 import dev.sergei.miniwebserver.data.saf.resolveOrCreateDir
 import dev.sergei.miniwebserver.data.saf.searchTree
 import dev.sergei.miniwebserver.domain.model.DirListing
 import dev.sergei.miniwebserver.domain.model.Folder
+import dev.sergei.miniwebserver.domain.model.OpenFile
 import dev.sergei.miniwebserver.domain.model.SearchHit
 import dev.sergei.miniwebserver.domain.model.StorageError
 import dev.sergei.miniwebserver.domain.model.StorageException
@@ -20,6 +22,7 @@ import dev.sergei.miniwebserver.domain.repository.StorageRepository
 import dev.sergei.miniwebserver.domain.util.storageKindOf
 import java.io.IOException
 import java.io.InputStream
+import java.io.OutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -56,7 +59,7 @@ class SafStorageRepository
             folderId: String,
             path: List<String>,
         ): DirListing {
-            requireGranted(folderId)
+            requireGranted(context, folderId)
             val dir = resolveDir(context, folderId, path) ?: return DirListing(emptyList(), emptyList())
             return listChildren(context, folderId, dir)
         }
@@ -65,7 +68,7 @@ class SafStorageRepository
             folderId: String,
             query: String,
         ): List<SearchHit> {
-            requireGranted(folderId)
+            requireGranted(context, folderId)
             if (query.isBlank()) return emptyList()
             return searchTree(context, folderId, query, MAX_SEARCH_RESULTS, MAX_SEARCH_DIRS)
         }
@@ -75,7 +78,7 @@ class SafStorageRepository
             path: List<String>,
             name: String,
         ) {
-            requireGranted(folderId)
+            requireGranted(context, folderId)
             val trimmed = name.trim()
             if (trimmed.isEmpty()) throw StorageException(StorageError.MKDIR_EMPTY_NAME)
             val parent = resolveDir(context, folderId, path) ?: throw StorageException(StorageError.FOLDER_NOT_GRANTED)
@@ -88,11 +91,37 @@ class SafStorageRepository
             path: List<String>,
             name: String,
         ) {
-            requireGranted(folderId)
+            requireGranted(context, folderId)
             if (name.isBlank()) throw StorageException(StorageError.DELETE_NO_NAME)
             val dir = resolveDir(context, folderId, path) ?: throw StorageException(StorageError.FOLDER_NOT_GRANTED)
             val target = dir.findFile(name) ?: return
             if (!target.delete()) throw StorageException(StorageError.DELETE_FAILED)
+        }
+
+        override fun exists(
+            folderId: String,
+            path: List<String>,
+            name: String,
+        ): Boolean {
+            requireGranted(context, folderId)
+            if (name.isBlank()) return false
+            val dir = resolveDir(context, folderId, path) ?: return false
+            return dir.findFile(name) != null
+        }
+
+        override fun open(
+            folderId: String,
+            path: List<String>,
+            name: String,
+        ): OpenFile {
+            requireGranted(context, folderId)
+            if (name.isBlank()) throw StorageException(StorageError.NO_FILE)
+            val dir = resolveDir(context, folderId, path) ?: throw StorageException(StorageError.FOLDER_NOT_GRANTED)
+            val file = dir.findFile(name)?.takeIf { it.isFile } ?: throw StorageException(StorageError.NO_FILE)
+            val stream =
+                context.contentResolver.openInputStream(file.uri)
+                    ?: throw StorageException(StorageError.NO_FILE)
+            return OpenFile(stream, file.length(), mimeOf(name))
         }
 
         override fun upload(
@@ -100,26 +129,29 @@ class SafStorageRepository
             path: List<String>,
             name: String,
             source: InputStream,
+            overwrite: Boolean,
         ) {
-            requireGranted(folderId)
+            requireGranted(context, folderId)
             if (name.isBlank()) throw StorageException(StorageError.NO_FILE)
             val dir =
                 resolveOrCreateDir(context, folderId, path)
                     ?: throw StorageException(StorageError.FOLDER_NOT_GRANTED)
+            if (!overwrite && dir.findFile(name) != null) throw StorageException(StorageError.FILE_EXISTS)
 
             // Write to a temp file first; replace the original only once it's fully
             // written, so a failed upload can't destroy the existing file.
             dir.findFile("$name.part")?.delete()
             val temp = dir.createFile(mimeOf(name), "$name.part") ?: throw StorageException(StorageError.CREATE_FAILED)
-            val written =
-                try {
-                    val output = context.contentResolver.openOutputStream(temp.uri)
-                    if (output == null) false else output.use { source.copyTo(it, DEFAULT_BUFFER_SIZE) }.let { true }
-                } catch (e: IOException) {
-                    Log.w(TAG, "Upload write failed", e)
-                    false
-                }
-            if (!written) {
+            try {
+                val output =
+                    context.contentResolver.openOutputStream(temp.uri)
+                        ?: throw StorageException(StorageError.CREATE_FAILED)
+                output.use { copyLimited(source, it) }
+            } catch (e: StorageException) {
+                temp.delete()
+                throw e
+            } catch (e: IOException) {
+                Log.w(TAG, "Upload write failed", e)
                 temp.delete()
                 throw StorageException(StorageError.CREATE_FAILED)
             }
@@ -129,12 +161,32 @@ class SafStorageRepository
                 throw StorageException(StorageError.CREATE_FAILED)
             }
         }
-
-        private fun requireGranted(folderId: String) {
-            val granted =
-                context.contentResolver.persistedUriPermissions.any {
-                    it.isWritePermission && it.uri.toString() == folderId
-                }
-            if (!granted) throw StorageException(StorageError.FOLDER_NOT_GRANTED)
-        }
     }
+
+private fun requireGranted(
+    context: Context,
+    folderId: String,
+) {
+    val granted =
+        context.contentResolver.persistedUriPermissions.any {
+            it.isWritePermission && it.uri.toString() == folderId
+        }
+    if (!granted) throw StorageException(StorageError.FOLDER_NOT_GRANTED)
+}
+
+// Copies the stream while enforcing the size cap, so a lying Content-Length
+// can't get past the limit.
+private fun copyLimited(
+    source: InputStream,
+    output: OutputStream,
+) {
+    val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+    var total = 0L
+    var read = source.read(buffer)
+    while (read >= 0) {
+        total += read
+        if (total > MAX_UPLOAD_BYTES) throw StorageException(StorageError.UPLOAD_TOO_LARGE)
+        output.write(buffer, 0, read)
+        read = source.read(buffer)
+    }
+}

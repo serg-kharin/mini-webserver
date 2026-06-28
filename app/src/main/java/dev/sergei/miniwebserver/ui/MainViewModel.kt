@@ -11,11 +11,12 @@ import dev.sergei.miniwebserver.domain.usecase.AddFolder
 import dev.sergei.miniwebserver.domain.usecase.GetFolders
 import dev.sergei.miniwebserver.domain.usecase.RemoveFolder
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -33,12 +34,17 @@ class MainViewModel
     ) : ViewModel() {
         private val folders = MutableStateFlow<List<Folder>>(emptyList())
 
-        val uiState: StateFlow<MainUiState> =
-            combine(folders, serverState.running) { current, running ->
-                MainUiState(current, running, if (running) serverUrl() else null)
+        // Resolve the URL only when the server toggles, off the main flow and on
+        // IO since interface enumeration blocks. Folder changes no longer touch it.
+        private val serverUrl: Flow<String?> =
+            serverState.running.map { running ->
+                if (running) withContext(Dispatchers.IO) { resolveUrl() } else null
             }
-                .flowOn(Dispatchers.Default)
-                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), MainUiState())
+
+        val uiState: StateFlow<MainUiState> =
+            combine(folders, serverState.running, serverUrl) { current, running, url ->
+                MainUiState(current, running, url)
+            }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), MainUiState())
 
         fun refresh() = viewModelScope.launch { reload() }
 
@@ -58,7 +64,7 @@ class MainViewModel
             folders.value = withContext(Dispatchers.IO) { getFolders() }
         }
 
-        private fun serverUrl(): String? = networkAddress.localIpv4()?.let { "http://$it:$DEFAULT_PORT" }
+        private fun resolveUrl(): String? = networkAddress.localIpv4()?.let { "http://$it:$DEFAULT_PORT" }
 
         private companion object {
             const val STOP_TIMEOUT_MS = 5_000L

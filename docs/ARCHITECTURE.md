@@ -25,13 +25,20 @@ di / core                   (wiring + shared runtime state)
   `MimeResolver` (platform `MimeTypeMap`). `LocalNetworkAddressProvider`.
 - **server** — HTTP delivery on NanoHTTPD. `WebServer` dispatches via a route
   table built from `Set<ApiRoute>` (Hilt multibinding); each endpoint is one
-  small `routes/*Route` class. `AssetServer` serves the React bundle from assets.
-  Responses are JSON DTOs; failures return machine-readable error codes.
+  small `routes/*Route` class (`list`, `upload`, `download`, `exists`, `mkdir`,
+  `delete`, `search`, `folders`). `AssetServer` serves the React bundle from
+  assets. State-changing routes require an anti-CSRF header; the read-only
+  `download` route opts out so a browser can fetch it via a plain link.
+  `UploadTempFiles` points NanoHTTPD's spool at the volume with the most free
+  space. Responses are JSON DTOs; failures return machine-readable error codes.
 - **ui** — MVVM. `MainViewModel` exposes a `StateFlow<MainUiState>`;
   `MainActivity` only renders and forwards intents.
-- **service** — `HttpService` foreground service hosting `WebServer`.
+- **service** — `HttpService` foreground service hosting `WebServer`. Exposes a
+  `Stop` notification action and auto-stops after 30 min of inactivity
+  (tracked by `core/ActivityTracker`, which `WebServer` touches per request).
 - **di** — Hilt modules binding ports, routes, and providing `Json`.
-- **core** — `ServerStateHolder` (shared running state), server config.
+- **core** — `ServerStateHolder` (shared running state), `ActivityTracker`,
+  server config (port, upload limit).
 
 Use cases throw `StorageException(StorageError)`; `WebServer` maps the code to an
 HTTP status and JSON body. The UI (Android resources and the web app) owns all

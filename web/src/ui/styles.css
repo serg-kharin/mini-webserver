@@ -38,14 +38,32 @@ ul.entries li {
   opacity: 0.6;
   font-size: 0.85rem;
 }
-.entry button {
+.entry button,
+.entry a[role='button'] {
   flex: none;
   width: auto;
   margin: 0;
   padding: 0.25rem 0.7rem;
 }
+.entry .confirm {
+  display: flex;
+  gap: 0.4rem;
+}
 .entry.dir {
   cursor: pointer;
+}
+
+li.pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: none !important;
+}
+li.pager button {
+  width: auto;
+  margin: 0;
+  padding: 0.25rem 0.8rem;
 }
 
 .muted {
@@ -77,11 +95,53 @@ nav[aria-label='breadcrumb'] a {
   cursor: pointer;
 }
 .upload-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   margin-bottom: 0.35rem;
 }
-.upload-item progress {
-  margin: 0.2rem 0 0;
+.upload-item .name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.upload-item progress.error {
-  accent-color: var(--pico-del-color, #e53935);
+.upload-item progress {
+  flex: 1;
+  margin: 0;
+}
+.upload-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.upload-actions button {
+  width: auto;
+  margin: 0;
+  padding: 0.2rem 0.7rem;
+}
+.upload-item .error {
+  color: var(--pico-del-color, #e53935);
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: var(--pico-border-radius);
+  background: var(--pico-del-color, #e53935);
+  color: #fff;
+}
+.toast .close {
+  width: auto;
+  margin: 0;
+  padding: 0.1rem 0.5rem;
+  background: transparent;
+  border: none;
+  color: #fff;
 }

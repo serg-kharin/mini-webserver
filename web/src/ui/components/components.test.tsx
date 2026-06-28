@@ -7,6 +7,7 @@ import Breadcrumbs from '@/ui/components/Breadcrumbs'
 import LanguageGate from '@/ui/components/LanguageGate'
 import LanguageSwitch from '@/ui/components/LanguageSwitch'
 import EntryList from '@/ui/components/EntryList'
+import Toast from '@/ui/components/Toast'
 
 describe('FolderSelect', () => {
   it('shows storage-prefixed labels and reports changes', () => {
@@ -84,8 +85,19 @@ describe('LanguageSwitch', () => {
   })
 })
 
+describe('Toast', () => {
+  it('shows a message and closes', () => {
+    const onClose = vi.fn()
+    render(<Toast message="Boom" onClose={onClose} />)
+    expect(screen.getByRole('alert')).toHaveTextContent('Boom')
+    fireEvent.click(screen.getByLabelText('close'))
+    expect(onClose).toHaveBeenCalled()
+  })
+})
+
 describe('EntryList', () => {
   const listing = { dirs: ['Album'], files: [{ name: 'a.flac', size: 10 }] }
+  const downloadUrl = (path: string[], name: string) => `/api/download?path=${path.join('/')}&name=${name}`
 
   it('shows a loading state', () => {
     render(
@@ -98,15 +110,15 @@ describe('EntryList', () => {
         onUp={vi.fn()}
         onDelete={vi.fn()}
         onOpenResult={vi.fn()}
+        downloadUrl={downloadUrl}
       />,
     )
     expect(screen.getByText('Loading…')).toBeInTheDocument()
   })
 
-  it('opens folders and deletes folders and files', () => {
+  it('opens folders and deletes a file after inline confirmation', () => {
     const onOpenDir = vi.fn()
     const onDelete = vi.fn()
-    const onUp = vi.fn()
     render(
       <EntryList
         loading={false}
@@ -114,22 +126,80 @@ describe('EntryList', () => {
         results={null}
         path={['Artist']}
         onOpenDir={onOpenDir}
-        onUp={onUp}
+        onUp={vi.fn()}
         onDelete={onDelete}
         onOpenResult={vi.fn()}
+        downloadUrl={downloadUrl}
       />,
     )
     fireEvent.click(screen.getByText(/Album/))
     expect(onOpenDir).toHaveBeenCalledWith('Album')
 
-    const deletes = screen.getAllByText('Delete')
-    fireEvent.click(deletes[0])
-    expect(onDelete).toHaveBeenCalledWith('Album')
-    fireEvent.click(deletes[1])
+    fireEvent.click(screen.getAllByText('Delete')[1])
+    fireEvent.click(screen.getByText('Confirm'))
     expect(onDelete).toHaveBeenCalledWith('a.flac')
   })
 
-  it('renders search results', () => {
+  it('cancels a pending delete', () => {
+    const onDelete = vi.fn()
+    render(
+      <EntryList
+        loading={false}
+        listing={listing}
+        results={null}
+        path={[]}
+        onOpenDir={vi.fn()}
+        onUp={vi.fn()}
+        onDelete={onDelete}
+        onOpenResult={vi.fn()}
+        downloadUrl={downloadUrl}
+      />,
+    )
+    fireEvent.click(screen.getAllByText('Delete')[0])
+    fireEvent.click(screen.getByText('Cancel'))
+    expect(onDelete).not.toHaveBeenCalled()
+  })
+
+  it('offers a download link for files', () => {
+    render(
+      <EntryList
+        loading={false}
+        listing={listing}
+        results={null}
+        path={['Artist']}
+        onOpenDir={vi.fn()}
+        onUp={vi.fn()}
+        onDelete={vi.fn()}
+        onOpenResult={vi.fn()}
+        downloadUrl={downloadUrl}
+      />,
+    )
+    const link = screen.getByText('Download')
+    expect(link).toHaveAttribute('href', '/api/download?path=Artist&name=a.flac')
+  })
+
+  it('paginates long listings', () => {
+    const many = { dirs: [], files: Array.from({ length: 25 }, (_, i) => ({ name: `f${i}.flac`, size: 1 })) }
+    render(
+      <EntryList
+        loading={false}
+        listing={many}
+        results={null}
+        path={[]}
+        onOpenDir={vi.fn()}
+        onUp={vi.fn()}
+        onDelete={vi.fn()}
+        onOpenResult={vi.fn()}
+        downloadUrl={downloadUrl}
+      />,
+    )
+    expect(screen.getByText('f0.flac')).toBeInTheDocument()
+    expect(screen.queryByText('f20.flac')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByText(/Next/))
+    expect(screen.getByText('f20.flac')).toBeInTheDocument()
+  })
+
+  it('renders search results with a download link', () => {
     const onOpenResult = vi.fn()
     render(
       <EntryList
@@ -141,8 +211,10 @@ describe('EntryList', () => {
         onUp={vi.fn()}
         onDelete={vi.fn()}
         onOpenResult={onOpenResult}
+        downloadUrl={downloadUrl}
       />,
     )
+    expect(screen.getByText('Download')).toHaveAttribute('href', '/api/download?path=Album&name=a.flac')
     fireEvent.click(screen.getByText('a.flac'))
     expect(onOpenResult).toHaveBeenCalled()
   })
@@ -159,6 +231,7 @@ describe('EntryList', () => {
         onUp={vi.fn()}
         onDelete={vi.fn()}
         onOpenResult={onOpenResult}
+        downloadUrl={downloadUrl}
       />,
     )
     fireEvent.click(screen.getByText(/Album/))
@@ -177,6 +250,7 @@ describe('EntryList', () => {
         onUp={onUp}
         onDelete={vi.fn()}
         onOpenResult={vi.fn()}
+        downloadUrl={downloadUrl}
       />,
     )
     fireEvent.click(screen.getByText(/\.\./))
@@ -192,6 +266,7 @@ describe('EntryList', () => {
         onUp={vi.fn()}
         onDelete={vi.fn()}
         onOpenResult={vi.fn()}
+        downloadUrl={downloadUrl}
       />,
     )
     expect(screen.getByText('Nothing found')).toBeInTheDocument()

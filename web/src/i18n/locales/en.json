@@ -25,17 +25,29 @@
     "drop": "Drop files here or click",
     "progress": "Uploading {{current}} of {{total}}: {{name}}",
     "done": "Done: uploaded {{done}} of {{total}}",
-    "errors": " (failed: {{failed}})"
+    "errors": " (failed: {{failed}})",
+    "conflictsSummary": " (already exist: {{conflicts}})",
+    "failed": "Failed",
+    "retry": "Retry",
+    "exists": "Already exists",
+    "replace": "Replace",
+    "skip": "Skip"
   },
   "list": {
     "loading": "Loading…",
     "empty": "empty",
     "notFound": "Nothing found",
     "root": "root",
-    "up": ".."
+    "up": "..",
+    "prev": "‹ Prev",
+    "next": "Next ›",
+    "page": "{{page}} / {{pages}}"
   },
   "entry": {
     "delete": "Delete",
+    "download": "Download",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
     "confirmDelete": "Delete \"{{name}}\"?"
   },
   "errors": {
@@ -47,6 +59,7 @@
     "delete_no_name": "No file specified",
     "delete_failed": "Could not delete",
     "upload_too_large": "File is too large",
+    "file_exists": "A file with this name already exists",
     "forbidden": "Request rejected",
     "unknown": "An error occurred"
   }

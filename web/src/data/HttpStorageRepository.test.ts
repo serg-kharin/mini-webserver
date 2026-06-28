@@ -68,6 +68,22 @@ describe('HttpStorageRepository', () => {
     mockFetch({ ok: false, status: 500, text: async () => 'oops' })
     expect(await repo.deleteEntry('t', [], 'x')).toEqual({ ok: false, error: undefined })
   })
+
+  it('reports whether a file exists', async () => {
+    mockFetch({ ok: true, json: async () => ({ exists: true }) })
+    expect(await repo.exists('t', ['A'], 'a.flac')).toBe(true)
+  })
+
+  it('treats a failed exists check as not existing', async () => {
+    mockFetch({ ok: false })
+    expect(await repo.exists('t', [], 'a.flac')).toBe(false)
+  })
+
+  it('builds a download URL', () => {
+    expect(repo.downloadUrl('tree:internal', ['A'], 'a.flac')).toBe(
+      '/api/download?folder=tree%3Ainternal&path=A&name=a.flac',
+    )
+  })
 })
 
 describe('HttpStorageRepository.uploadFile', () => {
@@ -88,8 +104,29 @@ describe('HttpStorageRepository.uploadFile', () => {
   afterEach(() => vi.restoreAllMocks())
 
   it('resolves ok on a 200 response', async () => {
-    const result = await repo.uploadFile('t', [], new File(['x'], 'a.txt'))
+    const result = await repo.uploadFile('t', [], new File(['x'], 'a.txt'), false)
     expect(result).toEqual({ ok: true, error: undefined })
+  })
+
+  it('adds the overwrite flag when replacing', async () => {
+    let url = ''
+    class CaptureXhr {
+      upload: Record<string, unknown> = {}
+      status = 200
+      responseText = '{"ok":true}'
+      onload: (() => void) | null = null
+      onerror: (() => void) | null = null
+      open(_method: string, requestUrl: string) {
+        url = requestUrl
+      }
+      setRequestHeader() {}
+      send() {
+        this.onload?.()
+      }
+    }
+    vi.stubGlobal('XMLHttpRequest', CaptureXhr)
+    await repo.uploadFile('t', [], new File(['x'], 'a.txt'), true)
+    expect(url).toContain('overwrite=true')
   })
 
   it('resolves an error when the request fails', async () => {
@@ -104,7 +141,7 @@ describe('HttpStorageRepository.uploadFile', () => {
       }
     }
     vi.stubGlobal('XMLHttpRequest', ErrorXhr)
-    const result = await repo.uploadFile('t', [], new File(['x'], 'a.txt'))
+    const result = await repo.uploadFile('t', [], new File(['x'], 'a.txt'), false)
     expect(result).toEqual({ ok: false, error: 'unknown' })
   })
 })

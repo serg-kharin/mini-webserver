@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useUseCases } from '@/app/UseCasesContext'
 import type { ActionResult, DirListing, Folder, SearchHit } from '@/domain/models/types'
+import { splitPath } from '@/domain/util/path'
 
 export function useFolderBrowser() {
   const useCases = useUseCases()
@@ -75,13 +76,18 @@ export function useFolderBrowser() {
 
   const goUp = useCallback(() => setPath((p) => p.slice(0, -1)), [])
 
+  const downloadUrl = useCallback(
+    (entryPath: string[], name: string) => useCases.downloadUrl(folderId, entryPath, name),
+    [useCases, folderId],
+  )
+
   const goTo = useCallback(
     (index: number) => setPath((p) => (index < 0 ? [] : p.slice(0, index + 1))),
     [],
   )
 
   const openResult = useCallback((hit: SearchHit) => {
-    const base = hit.path ? hit.path.split('/').filter(Boolean) : []
+    const base = splitPath(hit.path)
     setQuery('')
     setResults(null)
     setPath(hit.dir ? [...base, hit.name] : base)
@@ -119,6 +125,7 @@ export function useFolderBrowser() {
     goUp,
     goTo,
     openResult,
+    downloadUrl,
     createDirectory,
     deleteFile,
     refresh,

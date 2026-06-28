@@ -9,6 +9,22 @@ import java.net.URLDecoder
 
 private const val JSON_MIME = "application/json; charset=utf-8"
 private const val FORBIDDEN_BODY = """{"ok":false,"error":"forbidden"}"""
+private const val HTTP_PAYLOAD_TOO_LARGE = 413
+private const val HTTP_CONFLICT = 409
+
+// NanoHTTPD's Status enum lacks these codes, so supply them as custom statuses.
+private val payloadTooLarge = customStatus(HTTP_PAYLOAD_TOO_LARGE, "413 Payload Too Large")
+private val conflict = customStatus(HTTP_CONFLICT, "409 Conflict")
+
+private fun customStatus(
+    code: Int,
+    description: String,
+): Response.IStatus =
+    object : Response.IStatus {
+        override fun getRequestStatus() = code
+
+        override fun getDescription() = description
+    }
 
 fun jsonResponse(body: String): Response = newFixedLengthResponse(Response.Status.OK, JSON_MIME, body)
 
@@ -23,8 +39,10 @@ fun hasCsrfHeader(session: IHTTPSession): Boolean = session.headers["x-requested
 fun errorResponse(error: StorageError): Response =
     newFixedLengthResponse(statusFor(error), JSON_MIME, """{"ok":false,"error":"${error.code}"}""")
 
-private fun statusFor(error: StorageError): Response.Status =
+private fun statusFor(error: StorageError): Response.IStatus =
     when (error) {
+        StorageError.UPLOAD_TOO_LARGE -> payloadTooLarge
+        StorageError.FILE_EXISTS -> conflict
         StorageError.CREATE_FAILED,
         StorageError.MKDIR_FAILED,
         StorageError.DELETE_FAILED,

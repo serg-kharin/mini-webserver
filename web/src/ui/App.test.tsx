@@ -32,59 +32,54 @@ describe('App', () => {
     expect(screen.getByText('Mini Webserver')).toBeInTheDocument()
   })
 
-  it('alerts when creating a folder fails', async () => {
-    const alert = vi.spyOn(window, 'alert').mockImplementation(() => {})
+  it('shows a toast when creating a folder fails', async () => {
     renderWith(<App />, fakeUseCases({ createDirectory: async () => ({ ok: false, error: 'mkdir_failed' }) }))
     await waitFor(() => expect(screen.getByText('Internal: Music')).toBeInTheDocument())
     fireEvent.change(screen.getByPlaceholderText(/New folder/), { target: { value: 'X' } })
     fireEvent.click(screen.getByText('Create folder'))
-    await waitFor(() => expect(alert).toHaveBeenCalled())
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Could not create folder'))
   })
 
-  it('creates a folder without alerting on success', async () => {
-    const alert = vi.spyOn(window, 'alert').mockImplementation(() => {})
+  it('creates a folder without a toast on success', async () => {
     renderWith(<App />)
     await waitFor(() => expect(screen.getByText('Internal: Music')).toBeInTheDocument())
     fireEvent.change(screen.getByPlaceholderText(/New folder/), { target: { value: 'X' } })
     fireEvent.click(screen.getByText('Create folder'))
     await new Promise((r) => setTimeout(r, 50))
-    expect(alert).not.toHaveBeenCalled()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
-  it('deletes without alerting on success', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
-    const alert = vi.spyOn(window, 'alert').mockImplementation(() => {})
-    renderWith(<App />)
-    await waitFor(() => expect(screen.getByText('a.flac')).toBeInTheDocument())
-    fireEvent.click(screen.getAllByText('Delete')[1])
-    await new Promise((r) => setTimeout(r, 50))
-    expect(alert).not.toHaveBeenCalled()
-  })
-
-  it('does not delete when the user cancels', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false)
+  it('deletes a file after inline confirmation', async () => {
     const deleteEntry = vi.fn(async () => ({ ok: true }))
     renderWith(<App />, fakeUseCases({ deleteEntry }))
     await waitFor(() => expect(screen.getByText('a.flac')).toBeInTheDocument())
-    fireEvent.click(screen.getAllByText('Delete')[0])
+    fireEvent.click(screen.getAllByText('Delete')[1])
+    fireEvent.click(screen.getByText('Confirm'))
+    await waitFor(() => expect(deleteEntry).toHaveBeenCalledWith('t', [], 'a.flac'))
+  })
+
+  it('does not delete when the user cancels', async () => {
+    const deleteEntry = vi.fn(async () => ({ ok: true }))
+    renderWith(<App />, fakeUseCases({ deleteEntry }))
+    await waitFor(() => expect(screen.getByText('a.flac')).toBeInTheDocument())
+    fireEvent.click(screen.getAllByText('Delete')[1])
+    fireEvent.click(screen.getByText('Cancel'))
     expect(deleteEntry).not.toHaveBeenCalled()
   })
 
   it('falls back to a generic message when no error code is given', async () => {
-    const alert = vi.spyOn(window, 'alert').mockImplementation(() => {})
     renderWith(<App />, fakeUseCases({ createDirectory: async () => ({ ok: false }) }))
     await waitFor(() => expect(screen.getByText('Internal: Music')).toBeInTheDocument())
     fireEvent.change(screen.getByPlaceholderText(/New folder/), { target: { value: 'X' } })
     fireEvent.click(screen.getByText('Create folder'))
-    await waitFor(() => expect(alert).toHaveBeenCalled())
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('An error occurred'))
   })
 
-  it('alerts when deleting fails', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
-    const alert = vi.spyOn(window, 'alert').mockImplementation(() => {})
+  it('shows a toast when deleting fails', async () => {
     renderWith(<App />, fakeUseCases({ deleteEntry: async () => ({ ok: false }) }))
     await waitFor(() => expect(screen.getByText('a.flac')).toBeInTheDocument())
-    fireEvent.click(screen.getAllByText('Delete')[0])
-    await waitFor(() => expect(alert).toHaveBeenCalled())
+    fireEvent.click(screen.getAllByText('Delete')[1])
+    fireEvent.click(screen.getByText('Confirm'))
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('An error occurred'))
   })
 })
