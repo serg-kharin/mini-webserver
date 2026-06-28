@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
 import dev.sergei.miniwebserver.domain.model.SearchHit
+import dev.sergei.miniwebserver.domain.model.SearchResult
 import java.util.Locale
 
 private val SEARCH_PROJECTION =
@@ -27,8 +28,8 @@ fun searchTree(
     query: String,
     maxResults: Int,
     maxDirs: Int,
-): List<SearchHit> {
-    val root = folderDocument(context, folderId) ?: return emptyList()
+): SearchResult {
+    val root = folderDocument(context, folderId) ?: return SearchResult(emptyList(), truncated = false)
     val treeUri = treeUriOf(folderId)
     val needle = query.lowercase(Locale.ROOT)
     val hits = ArrayList<SearchHit>()
@@ -47,7 +48,9 @@ fun searchTree(
             }
         }
     }
-    return hits
+    // Cut short by either cap while work remained → there may be more matches.
+    val truncated = hits.size >= maxResults || (visited >= maxDirs && queue.isNotEmpty())
+    return SearchResult(hits, truncated)
 }
 
 private fun hitSize(child: Child): Long = if (child.isDir) 0L else child.size

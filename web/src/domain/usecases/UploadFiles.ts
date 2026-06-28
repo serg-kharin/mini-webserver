@@ -1,3 +1,4 @@
+import { MAX_UPLOAD_BYTES } from '@/domain/config'
 import type { StorageRepository } from '@/domain/repositories/StorageRepository'
 
 export interface UploadEntry {
@@ -6,7 +7,7 @@ export interface UploadEntry {
   path: string[]
 }
 
-export type UploadStatus = 'done' | 'error' | 'conflict'
+export type UploadStatus = 'done' | 'error' | 'conflict' | 'toolarge'
 
 export interface UploadCallbacks {
   onItemProgress?: (index: number, fraction: number) => void
@@ -40,16 +41,19 @@ export const makeUploadFiles =
     const summary: UploadSummary = { total, done: 0, failed: 0, conflicts: 0 }
     for (let i = 0; i < entries.length; i++) {
       const { file, path } = entries[i]
-      const fullPath = [...basePath, ...path]
-      onProgressText?.(i + 1, total, file.name)
 
-      // Don't clobber an existing file unless the caller asked to overwrite.
-      if (!overwrite && (await repo.exists(folderId, fullPath, file.name))) {
-        summary.conflicts++
-        onItemDone?.(i, 'conflict')
+      // Reject oversized files up front instead of spooling a whole 2 GB+ body.
+      if (file.size > MAX_UPLOAD_BYTES) {
+        summary.failed++
+        onItemDone?.(i, 'toolarge')
         continue
       }
 
+      const fullPath = [...basePath, ...path]
+      onProgressText?.(i + 1, total, file.name)
+
+      // The server returns 409/file_exists if it already exists and we're not
+      // overwriting — no extra round-trip needed to check first.
       const result = await repo.uploadFile(folderId, fullPath, file, overwrite, (fraction) =>
         onItemProgress?.(i, fraction),
       )

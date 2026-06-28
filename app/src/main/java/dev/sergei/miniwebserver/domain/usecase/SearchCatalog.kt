@@ -1,6 +1,6 @@
 package dev.sergei.miniwebserver.domain.usecase
 
-import dev.sergei.miniwebserver.domain.model.SearchHit
+import dev.sergei.miniwebserver.domain.model.SearchResult
 import dev.sergei.miniwebserver.domain.repository.StorageRepository
 import javax.inject.Inject
 
@@ -10,5 +10,5 @@ class SearchCatalog
         operator fun invoke(
             folderId: String,
             query: String,
-        ): List<SearchHit> = repository.search(folderId, query)
+        ): SearchResult = repository.search(folderId, query)
     }

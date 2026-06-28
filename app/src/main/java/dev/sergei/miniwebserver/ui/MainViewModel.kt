@@ -34,16 +34,17 @@ class MainViewModel
     ) : ViewModel() {
         private val folders = MutableStateFlow<List<Folder>>(emptyList())
 
-        // Resolve the URL only when the server toggles, off the main flow and on
-        // IO since interface enumeration blocks. Folder changes no longer touch it.
-        private val serverUrl: Flow<String?> =
+        // Resolve running+url together (off the main flow, on IO since interface
+        // enumeration blocks) so the UI never sees "running but no address" between
+        // two separate emissions. Folder changes don't re-resolve the URL.
+        private val serverStatus: Flow<ServerStatus> =
             serverState.running.map { running ->
-                if (running) withContext(Dispatchers.IO) { resolveUrl() } else null
+                ServerStatus(running, if (running) withContext(Dispatchers.IO) { resolveUrl() } else null)
             }
 
         val uiState: StateFlow<MainUiState> =
-            combine(folders, serverState.running, serverUrl) { current, running, url ->
-                MainUiState(current, running, url)
+            combine(folders, serverStatus) { current, status ->
+                MainUiState(current, status.running, status.url)
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), MainUiState())
 
         fun refresh() = viewModelScope.launch { reload() }
@@ -65,6 +66,8 @@ class MainViewModel
         }
 
         private fun resolveUrl(): String? = networkAddress.localIpv4()?.let { "http://$it:$DEFAULT_PORT" }
+
+        private data class ServerStatus(val running: Boolean, val url: String?)
 
         private companion object {
             const val STOP_TIMEOUT_MS = 5_000L

@@ -3,7 +3,7 @@ package dev.sergei.miniwebserver.domain.usecase
 import dev.sergei.miniwebserver.domain.model.DirListing
 import dev.sergei.miniwebserver.domain.model.Folder
 import dev.sergei.miniwebserver.domain.model.OpenFile
-import dev.sergei.miniwebserver.domain.model.SearchHit
+import dev.sergei.miniwebserver.domain.model.SearchResult
 import dev.sergei.miniwebserver.domain.model.StorageKind
 import dev.sergei.miniwebserver.domain.repository.StorageRepository
 import org.junit.Assert.assertEquals
@@ -30,7 +30,7 @@ private class FakeStorageRepository : StorageRepository {
     override fun search(
         folderId: String,
         query: String,
-    ) = emptyList<SearchHit>()
+    ) = SearchResult(emptyList(), truncated = false)
 
     override fun createDirectory(
         folderId: String,

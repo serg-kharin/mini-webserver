@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { useFolderBrowser } from '@/ui/hooks/useFolderBrowser'
 import { UseCasesProvider } from '@/app/UseCasesContext'
 import type { UseCases } from '@/app/container'
-import type { DirListing, SearchHit } from '@/domain/models/types'
+import type { DirListing, SearchResult } from '@/domain/models/types'
 import { fakeUseCases } from '@/test/fakes'
 
 function setup(useCases: UseCases = fakeUseCases()) {
@@ -93,14 +93,16 @@ describe('useFolderBrowser', () => {
   })
 
   it('ignores a stale search response', async () => {
-    let resolveStale: (value: SearchHit[]) => void = () => {}
-    const stale = new Promise<SearchHit[]>((resolve) => {
+    let resolveStale: (value: SearchResult) => void = () => {}
+    const stale = new Promise<SearchResult>((resolve) => {
       resolveStale = resolve
     })
     let calls = 0
     const searchCatalog = vi.fn(() => {
       calls += 1
-      return calls === 1 ? stale : Promise.resolve([{ name: 'fresh', path: '', dir: false, size: 1 }])
+      return calls === 1
+        ? stale
+        : Promise.resolve({ hits: [{ name: 'fresh', path: '', dir: false, size: 1 }], truncated: false })
     })
     const { result } = setup(fakeUseCases({ searchCatalog }))
     await waitFor(() => expect(result.current.folderId).toBe('t'))
@@ -109,7 +111,7 @@ describe('useFolderBrowser', () => {
     act(() => result.current.setQuery('ab'))
     await waitFor(() => expect(result.current.results?.[0]?.name).toBe('fresh'), { timeout: 1000 })
     await act(async () => {
-      resolveStale([{ name: 'stale', path: '', dir: false, size: 0 }])
+      resolveStale({ hits: [{ name: 'stale', path: '', dir: false, size: 0 }], truncated: false })
     })
     expect(result.current.results?.[0]?.name).toBe('fresh')
   })

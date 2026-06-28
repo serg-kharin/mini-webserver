@@ -3,6 +3,7 @@ package dev.sergei.miniwebserver.data.saf
 import android.content.Context
 import android.provider.DocumentsContract
 import androidx.documentfile.provider.DocumentFile
+import dev.sergei.miniwebserver.core.UPLOAD_TEMP_SUFFIX
 import dev.sergei.miniwebserver.domain.model.DirListing
 import dev.sergei.miniwebserver.domain.model.FileEntry
 import java.util.Locale
@@ -28,7 +29,9 @@ fun listChildren(
     val files = ArrayList<FileEntry>()
     context.contentResolver.query(childrenUri, LISTING_PROJECTION, null, null, null)?.use { cursor ->
         while (cursor.moveToNext()) {
-            val name = cursor.getString(0) ?: continue
+            val name = cursor.getString(0)
+            // Skip null names and half-written uploads (orphans from a killed transfer).
+            if (name == null || name.endsWith(UPLOAD_TEMP_SUFFIX)) continue
             if (cursor.getString(1) == DocumentsContract.Document.MIME_TYPE_DIR) {
                 dirs.add(name)
             } else {

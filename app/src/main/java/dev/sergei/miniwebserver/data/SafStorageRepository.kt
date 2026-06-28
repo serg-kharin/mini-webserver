@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.documentfile.provider.DocumentFile
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.sergei.miniwebserver.core.MAX_UPLOAD_BYTES
+import dev.sergei.miniwebserver.core.UPLOAD_TEMP_SUFFIX
 import dev.sergei.miniwebserver.data.saf.listChildren
 import dev.sergei.miniwebserver.data.saf.resolveDir
 import dev.sergei.miniwebserver.data.saf.resolveOrCreateDir
@@ -15,7 +16,7 @@ import dev.sergei.miniwebserver.data.saf.searchTree
 import dev.sergei.miniwebserver.domain.model.DirListing
 import dev.sergei.miniwebserver.domain.model.Folder
 import dev.sergei.miniwebserver.domain.model.OpenFile
-import dev.sergei.miniwebserver.domain.model.SearchHit
+import dev.sergei.miniwebserver.domain.model.SearchResult
 import dev.sergei.miniwebserver.domain.model.StorageError
 import dev.sergei.miniwebserver.domain.model.StorageException
 import dev.sergei.miniwebserver.domain.repository.StorageRepository
@@ -67,9 +68,9 @@ class SafStorageRepository
         override fun search(
             folderId: String,
             query: String,
-        ): List<SearchHit> {
+        ): SearchResult {
             requireGranted(context, folderId)
-            if (query.isBlank()) return emptyList()
+            if (query.isBlank()) return SearchResult(emptyList(), truncated = false)
             return searchTree(context, folderId, query, MAX_SEARCH_RESULTS, MAX_SEARCH_DIRS)
         }
 
@@ -140,13 +141,14 @@ class SafStorageRepository
 
             // Write to a temp file first; replace the original only once it's fully
             // written, so a failed upload can't destroy the existing file.
-            dir.findFile("$name.part")?.delete()
-            val temp = dir.createFile(mimeOf(name), "$name.part") ?: throw StorageException(StorageError.CREATE_FAILED)
+            val tempName = "$name$UPLOAD_TEMP_SUFFIX"
+            dir.findFile(tempName)?.delete()
+            val temp = dir.createFile(mimeOf(name), tempName) ?: throw StorageException(StorageError.CREATE_FAILED)
             try {
                 val output =
                     context.contentResolver.openOutputStream(temp.uri)
                         ?: throw StorageException(StorageError.CREATE_FAILED)
-                output.use { copyLimited(source, it) }
+                output.use { copyLimited(source, it, MAX_UPLOAD_BYTES) }
             } catch (e: StorageException) {
                 temp.delete()
                 throw e
@@ -175,17 +177,18 @@ private fun requireGranted(
 }
 
 // Copies the stream while enforcing the size cap, so a lying Content-Length
-// can't get past the limit.
-private fun copyLimited(
+// can't get past the limit. `internal` so it can be unit-tested directly.
+internal fun copyLimited(
     source: InputStream,
     output: OutputStream,
+    limit: Long,
 ) {
     val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
     var total = 0L
     var read = source.read(buffer)
     while (read >= 0) {
         total += read
-        if (total > MAX_UPLOAD_BYTES) throw StorageException(StorageError.UPLOAD_TOO_LARGE)
+        if (total > limit) throw StorageException(StorageError.UPLOAD_TOO_LARGE)
         output.write(buffer, 0, read)
         read = source.read(buffer)
     }

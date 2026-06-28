@@ -10,6 +10,7 @@ interface Props {
   loading: boolean
   listing: DirListing
   results: SearchHit[] | null
+  truncated?: boolean
   path: string[]
   onOpenDir: (name: string) => void
   onUp: () => void
@@ -22,6 +23,7 @@ export default function EntryList({
   loading,
   listing,
   results,
+  truncated = false,
   path,
   onOpenDir,
   onUp,
@@ -128,6 +130,7 @@ export default function EntryList({
     const { pageCount, current, visible } = paginate(results)
     return (
       <ul className="entries">
+        {truncated && <li className="muted">{t('list.truncated')}</li>}
         {visible.map((hit, i) => (
           <li
             key={current * PAGE_SIZE + i}

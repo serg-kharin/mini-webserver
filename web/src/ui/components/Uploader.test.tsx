@@ -89,6 +89,20 @@ describe('Uploader', () => {
     )
   })
 
+  it('shows an oversized item with skip only', async () => {
+    const uploadFiles = vi.fn(async (_folder, _path, _files, cb) => {
+      cb?.onItemDone?.(0, 'toolarge')
+      return { total: 1, done: 0, failed: 1, conflicts: 0 }
+    })
+    const { container } = renderWith(
+      <Uploader folderId="t" path={[]} onDone={vi.fn()} />,
+      fakeUseCases({ uploadFiles }),
+    )
+    pickFile(container, 'big.flac')
+    await waitFor(() => expect(screen.getByText(/Too large/)).toBeInTheDocument())
+    expect(screen.queryByText('Retry')).not.toBeInTheDocument()
+  })
+
   it('skips a conflicting item', async () => {
     const uploadFiles = vi.fn(async (_folder, _path, _files, cb) => {
       cb?.onItemDone?.(0, 'conflict')

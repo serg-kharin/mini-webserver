@@ -84,6 +84,7 @@ export default function App() {
         loading={browser.loading}
         listing={browser.listing}
         results={browser.results}
+        truncated={browser.truncated}
         path={browser.path}
         onOpenDir={browser.openDir}
         onUp={browser.goUp}

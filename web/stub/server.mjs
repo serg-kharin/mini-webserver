@@ -67,11 +67,7 @@ const handlers = {
   'GET /api/search': (q) => {
     const node = store[q.get('folder')]?.root
     const query = (q.get('q') ?? '').toLowerCase()
-    return node && query ? search(node, query, '', []) : []
-  },
-  'GET /api/exists': (q) => {
-    const node = resolve(q.get('folder'), splitPath(q.get('path')))
-    return { exists: !!node?.children?.[q.get('name')] }
+    return { hits: node && query ? search(node, query, '', []) : [], truncated: false }
   },
   'GET /api/version': () => ({ app: '0.0.0-stub' }),
   'POST /api/mkdir': (q) => mutate(q, (parent, name) => (parent.children[name] = dir())),

@@ -1,6 +1,6 @@
 import { UNKNOWN_ERROR } from '@/domain/models/errors'
 import { StorageKind } from '@/domain/models/types'
-import type { ActionResult, DirListing, Folder, SearchHit } from '@/domain/models/types'
+import type { ActionResult, DirListing, Folder, SearchResult } from '@/domain/models/types'
 import type { StorageRepository } from '@/domain/repositories/StorageRepository'
 
 const Endpoint = {
@@ -10,7 +10,6 @@ const Endpoint = {
   upload: '/upload',
   mkdir: '/mkdir',
   delete: '/delete',
-  exists: '/exists',
   download: '/download',
   version: '/version',
 } as const
@@ -41,12 +40,13 @@ interface SearchHitDto {
   dir: boolean
   size: number
 }
+interface SearchResultDto {
+  hits?: SearchHitDto[]
+  truncated?: boolean
+}
 interface ResultDto {
   ok?: boolean
   error?: string
-}
-interface ExistsDto {
-  exists?: boolean
 }
 interface VersionDto {
   app?: string
@@ -78,14 +78,17 @@ export default class HttpStorageRepository implements StorageRepository {
     }
   }
 
-  async search(folderId: string, query: string): Promise<SearchHit[]> {
+  async search(folderId: string, query: string): Promise<SearchResult> {
     const r = await fetch(
       this.url(Endpoint.search, { [Param.folder]: folderId, [Param.query]: query }),
       { headers: REQUEST_HEADERS },
     )
-    if (!r.ok) return []
-    const data = (await r.json()) as SearchHitDto[]
-    return data.map((x) => ({ name: x.name, path: x.path, dir: !!x.dir, size: x.size }))
+    if (!r.ok) return { hits: [], truncated: false }
+    const data = (await r.json()) as SearchResultDto
+    return {
+      hits: (data.hits ?? []).map((x) => ({ name: x.name, path: x.path, dir: !!x.dir, size: x.size })),
+      truncated: data.truncated === true,
+    }
   }
 
   createDirectory(folderId: string, path: string[], name: string): Promise<ActionResult> {
@@ -94,15 +97,6 @@ export default class HttpStorageRepository implements StorageRepository {
 
   deleteEntry(folderId: string, path: string[], name: string): Promise<ActionResult> {
     return this.post(this.url(Endpoint.delete, { ...locate(folderId, path), [Param.name]: name }))
-  }
-
-  async exists(folderId: string, path: string[], name: string): Promise<boolean> {
-    const r = await fetch(this.url(Endpoint.exists, { ...locate(folderId, path), [Param.name]: name }), {
-      headers: REQUEST_HEADERS,
-    })
-    if (!r.ok) return false
-    const d = (await r.json()) as ExistsDto
-    return d.exists === true
   }
 
   downloadUrl(folderId: string, path: string[], name: string): string {

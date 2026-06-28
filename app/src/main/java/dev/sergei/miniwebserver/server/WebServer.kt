@@ -27,6 +27,9 @@ class WebServer
         }
 
         override fun serve(session: IHTTPSession): Response {
+            // begin/end brackets the request (covers a slow upload spooled inside
+            // serve); streaming responses keep touching the tracker as they're read.
+            activityTracker.begin()
             activityTracker.touch(System.currentTimeMillis())
             return try {
                 val route = table[session.method to session.uri]
@@ -40,6 +43,8 @@ class WebServer
             } catch (e: Exception) {
                 Log.e(TAG, "Request failed: ${session.method} ${session.uri}", e)
                 errorResponse(StorageError.UNKNOWN)
+            } finally {
+                activityTracker.end(System.currentTimeMillis())
             }
         }
     }

@@ -23,7 +23,7 @@ class SearchRoute
         override val path = "/api/search"
 
         override fun handle(session: IHTTPSession): Response {
-            val hits = searchCatalog(folderParam(session), queryParam(session, "q").orEmpty())
-            return jsonResponse(json.encodeToString(hits.map { it.toDto() }))
+            val result = searchCatalog(folderParam(session), queryParam(session, "q").orEmpty())
+            return jsonResponse(json.encodeToString(result.toDto()))
         }
     }

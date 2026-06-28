@@ -29,7 +29,8 @@ class HttpService : Service() {
     private val idleWatchdog =
         object : Runnable {
             override fun run() {
-                if (activityTracker.idleFor(System.currentTimeMillis()) >= IDLE_TIMEOUT_MS) {
+                val idle = activityTracker.idleFor(System.currentTimeMillis()) >= IDLE_TIMEOUT_MS
+                if (idle && !activityTracker.hasActive()) {
                     stopSelf()
                 } else {
                     idleHandler.postDelayed(this, IDLE_CHECK_MS)

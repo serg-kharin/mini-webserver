@@ -8,6 +8,31 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Versions before
 
 ## [Unreleased]
 
+## [1.0.18] - 2026-06-28
+
+### Added
+- HTTP Range / `206 Partial Content` support for downloads, so audio can be
+  seeked in the browser and interrupted downloads resume instead of restarting.
+- Search shows a notice when results were capped (500 hits / 5000 directories),
+  so a truncated scan is no longer silent.
+
+### Changed
+- Idle auto-stop no longer interrupts a transfer in progress: the watchdog tracks
+  in-flight requests and streaming reads, not just the start of a request.
+- The upload size limit is enforced against the actual spooled bytes, not only the
+  declared `Content-Length` (which a client can understate).
+- The overwrite check runs on the server before the body is spooled, so a conflict
+  fails fast; the browser no longer makes a separate existence request per file.
+- Oversized files are rejected in the browser before any upload starts.
+- Downloads send `X-Content-Type-Options: nosniff`, and server JSON responses are
+  serialized instead of hand-built strings.
+
+### Fixed
+- Half-written `.part` uploads are hidden from the file listing, so an interrupted
+  transfer no longer leaves a visible, downloadable stub.
+- The app screen no longer flashes "no Wi-Fi address" when the server starts: the
+  running state and the address now update in a single step.
+
 ## [1.0.17] - 2026-06-28
 
 ### Added
@@ -52,6 +77,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Versions before
   (error-to-status mapping), `AssetServer` (index fallback) and
   `SafStorageRepository` (folder-grant checks).
 
-[Unreleased]: https://github.com/serg-kharin/mini-webserver/compare/v1.0.17...HEAD
+[Unreleased]: https://github.com/serg-kharin/mini-webserver/compare/v1.0.18...HEAD
+[1.0.18]: https://github.com/serg-kharin/mini-webserver/compare/v1.0.17...v1.0.18
 [1.0.17]: https://github.com/serg-kharin/mini-webserver/compare/v1.0.14...v1.0.17
 [1.0.14]: https://github.com/serg-kharin/mini-webserver/compare/v1.0.13...v1.0.14

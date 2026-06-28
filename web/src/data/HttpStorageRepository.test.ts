@@ -37,16 +37,20 @@ describe('HttpStorageRepository', () => {
     expect(listing.dirs).toEqual(['A'])
   })
 
-  it('maps search hits', async () => {
-    mockFetch({ ok: true, json: async () => [{ name: 'x', path: 'A', dir: false, size: 2 }] })
-    const hits = await repo.search('f', 'x')
-    expect(hits[0]).toEqual({ name: 'x', path: 'A', dir: false, size: 2 })
+  it('maps search hits and the truncated flag', async () => {
+    mockFetch({
+      ok: true,
+      json: async () => ({ hits: [{ name: 'x', path: 'A', dir: false, size: 2 }], truncated: true }),
+    })
+    const result = await repo.search('f', 'x')
+    expect(result.hits[0]).toEqual({ name: 'x', path: 'A', dir: false, size: 2 })
+    expect(result.truncated).toBe(true)
   })
 
   it('returns defaults when list or search fails', async () => {
     mockFetch({ ok: false })
     expect(await repo.list('f', [])).toEqual({ dirs: [], files: [] })
-    expect(await repo.search('f', 'x')).toEqual([])
+    expect(await repo.search('f', 'x')).toEqual({ hits: [], truncated: false })
   })
 
   it('handles a listing without dirs or files', async () => {
@@ -67,16 +71,6 @@ describe('HttpStorageRepository', () => {
   it('treats a non-JSON body as failure', async () => {
     mockFetch({ ok: false, status: 500, text: async () => 'oops' })
     expect(await repo.deleteEntry('t', [], 'x')).toEqual({ ok: false, error: undefined })
-  })
-
-  it('reports whether a file exists', async () => {
-    mockFetch({ ok: true, json: async () => ({ exists: true }) })
-    expect(await repo.exists('t', ['A'], 'a.flac')).toBe(true)
-  })
-
-  it('treats a failed exists check as not existing', async () => {
-    mockFetch({ ok: false })
-    expect(await repo.exists('t', [], 'a.flac')).toBe(false)
   })
 
   it('builds a download URL', () => {

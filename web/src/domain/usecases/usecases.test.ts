@@ -7,15 +7,15 @@ import { makeDeleteEntry } from '@/domain/usecases/DeleteEntry'
 import { makeUploadFiles } from '@/domain/usecases/UploadFiles'
 import { makeDownloadUrl } from '@/domain/usecases/DownloadUrl'
 import { makeGetServerVersion } from '@/domain/usecases/GetServerVersion'
+import { MAX_UPLOAD_BYTES } from '@/domain/config'
 import type { StorageRepository } from '@/domain/repositories/StorageRepository'
 
 const repo = (over: Partial<StorageRepository> = {}): StorageRepository => ({
   getFolders: vi.fn(async () => []),
   list: vi.fn(async () => ({ dirs: [], files: [] })),
-  search: vi.fn(async () => []),
+  search: vi.fn(async () => ({ hits: [], truncated: false })),
   createDirectory: vi.fn(async () => ({ ok: true })),
   deleteEntry: vi.fn(async () => ({ ok: true })),
-  exists: vi.fn(async () => false),
   downloadUrl: vi.fn(() => '/api/download'),
   serverVersion: vi.fn(async () => '1.2.3'),
   uploadFile: vi.fn(async () => ({ ok: true })),
@@ -69,27 +69,32 @@ describe('use cases', () => {
     expect(summary).toEqual({ total: 1, done: 0, failed: 1, conflicts: 0 })
   })
 
-  it('uploadFiles flags existing files as conflicts and skips the upload', async () => {
-    const uploadFile = vi.fn(async () => ({ ok: true }))
-    const r = repo({ exists: vi.fn(async () => true), uploadFile })
+  it('uploadFiles maps a server file_exists conflict', async () => {
+    const uploadFile = vi.fn(async () => ({ ok: false, error: 'file_exists' }))
+    const r = repo({ uploadFile })
     const onItemDone = vi.fn()
     const summary = await makeUploadFiles(r)('f', [], [{ file: new File(['z'], 'c.txt'), path: [] }], {
       onItemDone,
     })
     expect(summary).toEqual({ total: 1, done: 0, failed: 0, conflicts: 1 })
-    expect(uploadFile).not.toHaveBeenCalled()
     expect(onItemDone).toHaveBeenCalledWith(0, 'conflict')
   })
 
-  it('uploadFiles overwrites without an existence check', async () => {
-    const exists = vi.fn(async () => true)
+  it('uploadFiles passes overwrite through to the repository', async () => {
     const uploadFile = vi.fn(async () => ({ ok: true }))
-    const r = repo({ exists, uploadFile })
-    const summary = await makeUploadFiles(r)('f', [], [{ file: new File(['z'], 'c.txt'), path: [] }], {
-      overwrite: true,
-    })
-    expect(summary).toEqual({ total: 1, done: 1, failed: 0, conflicts: 0 })
-    expect(exists).not.toHaveBeenCalled()
+    const r = repo({ uploadFile })
+    await makeUploadFiles(r)('f', [], [{ file: new File(['z'], 'c.txt'), path: [] }], { overwrite: true })
     expect(uploadFile).toHaveBeenCalledWith('f', [], expect.any(File), true, expect.any(Function))
+  })
+
+  it('uploadFiles rejects oversized files without uploading', async () => {
+    const uploadFile = vi.fn(async () => ({ ok: true }))
+    const r = repo({ uploadFile })
+    const onItemDone = vi.fn()
+    const big = { size: MAX_UPLOAD_BYTES + 1, name: 'big.flac' } as unknown as File
+    const summary = await makeUploadFiles(r)('f', [], [{ file: big, path: [] }], { onItemDone })
+    expect(uploadFile).not.toHaveBeenCalled()
+    expect(summary).toEqual({ total: 1, done: 0, failed: 1, conflicts: 0 })
+    expect(onItemDone).toHaveBeenCalledWith(0, 'toolarge')
   })
 })

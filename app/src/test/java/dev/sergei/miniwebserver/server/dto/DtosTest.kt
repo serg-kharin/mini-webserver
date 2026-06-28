@@ -4,6 +4,7 @@ import dev.sergei.miniwebserver.domain.model.DirListing
 import dev.sergei.miniwebserver.domain.model.FileEntry
 import dev.sergei.miniwebserver.domain.model.Folder
 import dev.sergei.miniwebserver.domain.model.SearchHit
+import dev.sergei.miniwebserver.domain.model.SearchResult
 import dev.sergei.miniwebserver.domain.model.StorageKind
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -31,5 +32,13 @@ class DtosTest {
         assertEquals("Artist/Album", dto.path)
         assertEquals(false, dto.dir)
         assertEquals(42L, dto.size)
+    }
+
+    @Test
+    fun searchResultMapsHitsAndTruncation() {
+        val dto = SearchResult(listOf(SearchHit("a.flac", "", isDir = false, size = 1)), truncated = true).toDto()
+        assertEquals(1, dto.hits.size)
+        assertEquals("a.flac", dto.hits.single().name)
+        assertEquals(true, dto.truncated)
     }
 }

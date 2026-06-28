@@ -261,6 +261,24 @@ describe('EntryList', () => {
     expect(screen.getByText('r20.flac')).toBeInTheDocument()
   })
 
+  it('shows a note when search results are truncated', () => {
+    render(
+      <EntryList
+        loading={false}
+        listing={{ dirs: [], files: [] }}
+        results={[{ name: 'a.flac', path: 'Album', dir: false, size: 1 }]}
+        truncated
+        path={[]}
+        onOpenDir={vi.fn()}
+        onUp={vi.fn()}
+        onDelete={vi.fn()}
+        onOpenResult={vi.fn()}
+        downloadUrl={downloadUrl}
+      />,
+    )
+    expect(screen.getByText(/Showing the first matches/)).toBeInTheDocument()
+  })
+
   it('renders a folder search result', () => {
     const onOpenResult = vi.fn()
     render(

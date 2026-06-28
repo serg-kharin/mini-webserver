@@ -5,12 +5,19 @@ import dev.sergei.miniwebserver.domain.util.splitPath
 import fi.iki.elonen.NanoHTTPD.IHTTPSession
 import fi.iki.elonen.NanoHTTPD.Response
 import fi.iki.elonen.NanoHTTPD.newFixedLengthResponse
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import java.net.URLDecoder
 
 private const val JSON_MIME = "application/json; charset=utf-8"
-private const val FORBIDDEN_BODY = """{"ok":false,"error":"forbidden"}"""
 private const val HTTP_PAYLOAD_TOO_LARGE = 413
 private const val HTTP_CONFLICT = 409
+
+private val responseJson = Json { encodeDefaults = true }
+
+@Serializable
+private data class ResultBody(val ok: Boolean, val error: String? = null)
 
 // NanoHTTPD's Status enum lacks these codes, so supply them as custom statuses.
 private val payloadTooLarge = customStatus(HTTP_PAYLOAD_TOO_LARGE, "413 Payload Too Large")
@@ -28,16 +35,21 @@ private fun customStatus(
 
 fun jsonResponse(body: String): Response = newFixedLengthResponse(Response.Status.OK, JSON_MIME, body)
 
-fun okResponse(): Response = jsonResponse("""{"ok":true}""")
+fun okResponse(): Response = jsonResponse(responseJson.encodeToString(ResultBody(ok = true)))
 
-fun forbiddenResponse(): Response = newFixedLengthResponse(Response.Status.FORBIDDEN, JSON_MIME, FORBIDDEN_BODY)
+fun forbiddenResponse(): Response =
+    newFixedLengthResponse(
+        Response.Status.FORBIDDEN,
+        JSON_MIME,
+        responseJson.encodeToString(ResultBody(ok = false, error = "forbidden")),
+    )
 
 // Blocks cross-site requests: browsers can't set a custom header on a no-cors
 // fetch or a form submit, so requiring one keeps other sites from calling the API.
 fun hasCsrfHeader(session: IHTTPSession): Boolean = session.headers["x-requested-with"] != null
 
 fun errorResponse(error: StorageError): Response =
-    newFixedLengthResponse(statusFor(error), JSON_MIME, """{"ok":false,"error":"${error.code}"}""")
+    newFixedLengthResponse(statusFor(error), JSON_MIME, responseJson.encodeToString(ResultBody(ok = false, error = error.code)))
 
 private fun statusFor(error: StorageError): Response.IStatus =
     when (error) {

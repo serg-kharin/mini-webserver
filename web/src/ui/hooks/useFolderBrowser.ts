@@ -11,6 +11,7 @@ export function useFolderBrowser() {
   const [path, setPath] = useState<string[]>([])
   const [listing, setListing] = useState<DirListing>({ dirs: [], files: [] })
   const [results, setResults] = useState<SearchHit[] | null>(null)
+  const [truncated, setTruncated] = useState(false)
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -46,14 +47,16 @@ export function useFolderBrowser() {
   useEffect(() => {
     if (!query || !folderId) {
       setResults(null)
+      setTruncated(false)
       return
     }
     const seq = ++requestId.current
     setLoading(true)
     const timer = setTimeout(() => {
-      void useCases.searchCatalog(folderId, query).then((hits) => {
+      void useCases.searchCatalog(folderId, query).then((result) => {
         if (seq === requestId.current) {
-          setResults(hits)
+          setResults(result.hits)
+          setTruncated(result.truncated)
           setLoading(false)
         }
       })
@@ -117,6 +120,7 @@ export function useFolderBrowser() {
     path,
     listing,
     results,
+    truncated,
     query,
     loading,
     setQuery,

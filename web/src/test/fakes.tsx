@@ -7,7 +7,10 @@ export function fakeUseCases(overrides: Partial<UseCases> = {}): UseCases {
   return {
     getFolders: async () => [{ id: 't', name: 'Music', storage: 'internal' }],
     listDirectory: async () => ({ dirs: ['Album'], files: [{ name: 'a.flac', size: 10 }] }),
-    searchCatalog: async () => [{ name: 'a.flac', path: 'Album', dir: false, size: 10 }],
+    searchCatalog: async () => ({
+      hits: [{ name: 'a.flac', path: 'Album', dir: false, size: 10 }],
+      truncated: false,
+    }),
     createDirectory: async () => ({ ok: true }),
     deleteEntry: async () => ({ ok: true }),
     uploadFiles: async () => ({ total: 0, done: 0, failed: 0, conflicts: 0 }),

@@ -10,7 +10,7 @@ interface Props {
   onDone: () => void
 }
 
-type ItemState = 'uploading' | 'error' | 'conflict'
+type ItemState = 'uploading' | 'error' | 'conflict' | 'toolarge'
 
 interface UploadItem {
   id: number
@@ -127,6 +127,14 @@ export default function Uploader({ folderId, path, onDone }: Props) {
               <button className="outline" onClick={() => restart(it, true)}>
                 {t('upload.replace')}
               </button>
+              <button className="outline secondary" onClick={() => removeItem(it.id)}>
+                {t('upload.skip')}
+              </button>
+            </span>
+          )}
+          {it.state === 'toolarge' && (
+            <span className="upload-actions">
+              <small className="error">{t('upload.tooLarge')}</small>
               <button className="outline secondary" onClick={() => removeItem(it.id)}>
                 {t('upload.skip')}
               </button>

@@ -31,12 +31,14 @@
     "retry": "Retry",
     "exists": "Already exists",
     "replace": "Replace",
-    "skip": "Skip"
+    "skip": "Skip",
+    "tooLarge": "Too large (max 2 GB)"
   },
   "list": {
     "loading": "Loading…",
     "empty": "empty",
     "notFound": "Nothing found",
+    "truncated": "Showing the first matches — narrow your search to see more.",
     "root": "root",
     "up": "..",
     "prev": "‹ Prev",

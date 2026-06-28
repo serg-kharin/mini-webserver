@@ -3,7 +3,7 @@ package dev.sergei.miniwebserver.domain.repository
 import dev.sergei.miniwebserver.domain.model.DirListing
 import dev.sergei.miniwebserver.domain.model.Folder
 import dev.sergei.miniwebserver.domain.model.OpenFile
-import dev.sergei.miniwebserver.domain.model.SearchHit
+import dev.sergei.miniwebserver.domain.model.SearchResult
 import java.io.InputStream
 
 interface StorageRepository {
@@ -21,7 +21,7 @@ interface StorageRepository {
     fun search(
         folderId: String,
         query: String,
-    ): List<SearchHit>
+    ): SearchResult
 
     fun createDirectory(
         folderId: String,

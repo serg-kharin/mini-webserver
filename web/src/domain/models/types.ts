@@ -29,6 +29,12 @@ export interface SearchHit {
   size: number
 }
 
+export interface SearchResult {
+  hits: SearchHit[]
+  // True when the scan was cut short by the result/directory caps.
+  truncated: boolean
+}
+
 export interface ActionResult {
   ok: boolean
   error?: string
