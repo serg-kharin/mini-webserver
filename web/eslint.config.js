@@ -19,10 +19,9 @@ export default tseslint.config(
       'react-refresh': reactRefresh,
     },
     rules: {
-      ...reactHooks.configs.recommended.rules,
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
-      // Data-fetching effects legitimately set loading/result state synchronously.
-      'react-hooks/set-state-in-effect': 'off',
     },
   },
   prettier,

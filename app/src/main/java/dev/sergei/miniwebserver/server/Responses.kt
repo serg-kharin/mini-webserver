@@ -8,12 +8,13 @@ import fi.iki.elonen.NanoHTTPD.newFixedLengthResponse
 import java.net.URLDecoder
 
 private const val JSON_MIME = "application/json; charset=utf-8"
+private const val FORBIDDEN_BODY = """{"ok":false,"error":"forbidden"}"""
 
 fun jsonResponse(body: String): Response = newFixedLengthResponse(Response.Status.OK, JSON_MIME, body)
 
 fun okResponse(): Response = jsonResponse("""{"ok":true}""")
 
-fun forbiddenResponse(): Response = newFixedLengthResponse(Response.Status.FORBIDDEN, JSON_MIME, """{"ok":false,"error":"forbidden"}""")
+fun forbiddenResponse(): Response = newFixedLengthResponse(Response.Status.FORBIDDEN, JSON_MIME, FORBIDDEN_BODY)
 
 // Blocks cross-site requests: browsers can't set a custom header on a no-cors
 // fetch or a form submit, so requiring one keeps other sites from calling the API.

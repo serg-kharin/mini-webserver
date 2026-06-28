@@ -1,11 +1,9 @@
 package dev.sergei.miniwebserver.service
 
-import android.annotation.SuppressLint
 import android.app.Service
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.IBinder
-import android.os.PowerManager
 import androidx.core.app.ServiceCompat
 import dagger.hilt.android.AndroidEntryPoint
 import dev.sergei.miniwebserver.core.ServerStateHolder
@@ -20,7 +18,6 @@ class HttpService : Service() {
     @Inject lateinit var serverState: ServerStateHolder
 
     private var server: WebServer? = null
-    private var wakeLock: PowerManager.WakeLock? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -37,7 +34,6 @@ class HttpService : Service() {
         )
         if (server == null) {
             server = serverProvider.get().also { it.start(SOCKET_TIMEOUT, false) }
-            wakeLock = acquireWakeLock()
             serverState.setRunning(true)
         }
         return START_STICKY
@@ -46,22 +42,11 @@ class HttpService : Service() {
     override fun onDestroy() {
         server?.stop()
         server = null
-        wakeLock?.let { if (it.isHeld) it.release() }
-        wakeLock = null
         serverState.setRunning(false)
         super.onDestroy()
     }
 
-    // Held for the whole server lifetime and released in onDestroy; if the process
-    // is killed the OS frees the partial wake lock anyway, so no timeout is needed.
-    @SuppressLint("WakelockTimeout")
-    private fun acquireWakeLock(): PowerManager.WakeLock =
-        getSystemService(PowerManager::class.java)
-            .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKELOCK_TAG)
-            .apply { acquire() }
-
     private companion object {
         const val SOCKET_TIMEOUT = 5000
-        const val WAKELOCK_TAG = "MiniWebserver::server"
     }
 }
