@@ -1,0 +1,19 @@
+# Thresholds tuned to the project's style; layered on top of detekt defaults.
+exceptions:
+  TooGenericExceptionCaught:
+    # The HTTP request boundary intentionally maps every error to a 500 response.
+    active: false
+  SwallowedException:
+    # A missing asset / failed write is control flow, conveyed by the return value.
+    ignoredExceptionTypes:
+      - IOException
+
+style:
+  MaxLineLength:
+    maxLineLength: 140
+  ReturnCount:
+    max: 4
+  MagicNumber:
+    ignorePropertyDeclaration: true
+    # 2 and 3 are cursor column indices.
+    ignoreNumbers: ['-1', '0', '1', '2', '3']

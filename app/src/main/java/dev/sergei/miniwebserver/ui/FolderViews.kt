@@ -10,6 +10,8 @@ import dev.sergei.miniwebserver.R
 import dev.sergei.miniwebserver.domain.model.Folder
 import dev.sergei.miniwebserver.domain.model.StorageKind
 
+private const val MUTED_ALPHA = 0.6f
+
 fun renderFolders(
     container: LinearLayout,
     folders: List<Folder>,
@@ -21,7 +23,7 @@ fun renderFolders(
         container.addView(
             TextView(context).apply {
                 text = context.getString(R.string.folders_empty)
-                alpha = 0.6f
+                alpha = MUTED_ALPHA
             },
         )
         return
