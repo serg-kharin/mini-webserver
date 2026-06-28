@@ -9,6 +9,15 @@ HTTP server so you can upload files from a computer on the same Wi-Fi network to
 the device — including the microSD card. The web UI is React; the backend is
 Kotlin.
 
+## Screenshots
+<p>
+  <img src="docs/assets/app-running.png" alt="App on the device with the server running" height="430">
+  <img src="docs/assets/web-server.png" alt="Web interface in the browser" height="430">
+</p>
+
+On the left: the app on the device once the server is started (address + QR to
+scan). On the right: the web interface opened in a browser on the same Wi-Fi.
+
 ## Security
 This server is built for **personal use**. It has **no authentication** — while it
 is running, anyone on the same Wi-Fi network can browse, upload and delete files in
