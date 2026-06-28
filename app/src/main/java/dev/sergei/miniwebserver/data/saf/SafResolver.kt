@@ -22,3 +22,13 @@ fun resolveDir(
     }
     return dir
 }
+
+// Like resolveDir but creates missing directories along the way (mkdir -p).
+fun resolveOrCreateDir(
+    context: Context,
+    folderId: String,
+    path: List<String>,
+): DocumentFile? =
+    path.fold(folderDocument(context, folderId)) { dir, segment ->
+        dir?.let { it.findFile(segment)?.takeIf { child -> child.isDirectory } ?: it.createDirectory(segment) }
+    }

@@ -33,11 +33,11 @@ describe('Uploader', () => {
   })
 
   it('reflects progress callbacks from the use case', async () => {
-    const uploadFiles = vi.fn(async (_folder, _path, files, cb) => {
-      cb?.onProgressText?.(1, files.length, files[0].name)
+    const uploadFiles = vi.fn(async (_folder, _basePath, entries, cb) => {
+      cb?.onProgressText?.(1, entries.length, entries[0].file.name)
       cb?.onItemProgress?.(0, 0.5)
       cb?.onItemDone?.(0, true)
-      return { total: files.length, done: files.length, failed: 0 }
+      return { total: entries.length, done: entries.length, failed: 0 }
     })
     const { container } = renderWith(
       <Uploader folderId="t" path={[]} onDone={vi.fn()} />,

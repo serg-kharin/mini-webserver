@@ -9,6 +9,7 @@ import androidx.documentfile.provider.DocumentFile
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.sergei.miniwebserver.data.saf.listChildren
 import dev.sergei.miniwebserver.data.saf.resolveDir
+import dev.sergei.miniwebserver.data.saf.resolveOrCreateDir
 import dev.sergei.miniwebserver.data.saf.searchTree
 import dev.sergei.miniwebserver.domain.model.DirListing
 import dev.sergei.miniwebserver.domain.model.Folder
@@ -102,7 +103,9 @@ class SafStorageRepository
         ) {
             requireGranted(folderId)
             if (name.isBlank()) throw StorageException(StorageError.NO_FILE)
-            val dir = resolveDir(context, folderId, path) ?: throw StorageException(StorageError.FOLDER_NOT_GRANTED)
+            val dir =
+                resolveOrCreateDir(context, folderId, path)
+                    ?: throw StorageException(StorageError.FOLDER_NOT_GRANTED)
 
             // Write to a temp file first; replace the original only once it's fully
             // written, so a failed upload can't destroy the existing file.

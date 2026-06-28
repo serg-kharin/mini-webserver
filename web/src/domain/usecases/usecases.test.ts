@@ -34,9 +34,12 @@ describe('use cases', () => {
     const r = repo()
     const onItemDone = vi.fn()
     const onProgressText = vi.fn()
-    const files = [new File(['x'], 'a.txt'), new File(['y'], 'b.txt')]
+    const entries = [
+      { file: new File(['x'], 'a.txt'), path: [] },
+      { file: new File(['y'], 'b.txt'), path: [] },
+    ]
 
-    const summary = await makeUploadFiles(r)('f', [], files, { onItemDone, onProgressText })
+    const summary = await makeUploadFiles(r)('f', [], entries, { onItemDone, onProgressText })
 
     expect(summary).toEqual({ total: 2, done: 2, failed: 0 })
     expect(onItemDone).toHaveBeenCalledTimes(2)
@@ -45,7 +48,7 @@ describe('use cases', () => {
 
   it('uploadFiles counts failures', async () => {
     const r = repo({ uploadFile: vi.fn(async () => ({ ok: false, error: 'x' })) })
-    const summary = await makeUploadFiles(r)('f', [], [new File(['z'], 'c.txt')])
+    const summary = await makeUploadFiles(r)('f', [], [{ file: new File(['z'], 'c.txt'), path: [] }])
     expect(summary).toEqual({ total: 1, done: 0, failed: 1 })
   })
 })

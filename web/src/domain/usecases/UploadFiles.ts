@@ -1,5 +1,11 @@
 import type { StorageRepository } from '@/domain/repositories/StorageRepository'
 
+export interface UploadEntry {
+  file: File
+  // Path relative to the destination folder (subfolders for dropped directories).
+  path: string[]
+}
+
 export interface UploadCallbacks {
   onItemProgress?: (index: number, fraction: number) => void
   onItemDone?: (index: number, ok: boolean) => void
@@ -17,18 +23,18 @@ export const makeUploadFiles =
   (repo: StorageRepository) =>
   async (
     folderId: string,
-    path: string[],
-    files: File[],
+    basePath: string[],
+    entries: UploadEntry[],
     callbacks: UploadCallbacks = {},
   ): Promise<UploadSummary> => {
     const { onItemProgress, onItemDone, onProgressText } = callbacks
-    const total = files.length
+    const total = entries.length
     let done = 0
     let failed = 0
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i]
+    for (let i = 0; i < entries.length; i++) {
+      const { file, path } = entries[i]
       onProgressText?.(i + 1, total, file.name)
-      const result = await repo.uploadFile(folderId, path, file, (fraction) =>
+      const result = await repo.uploadFile(folderId, [...basePath, ...path], file, (fraction) =>
         onItemProgress?.(i, fraction),
       )
       onItemDone?.(i, result.ok)
