@@ -13,6 +13,12 @@ fun jsonResponse(body: String): Response = newFixedLengthResponse(Response.Statu
 
 fun okResponse(): Response = jsonResponse("""{"ok":true}""")
 
+fun forbiddenResponse(): Response = newFixedLengthResponse(Response.Status.FORBIDDEN, JSON_MIME, """{"ok":false,"error":"forbidden"}""")
+
+// Blocks cross-site requests: browsers can't set a custom header on a no-cors
+// fetch or a form submit, so requiring one keeps other sites from calling the API.
+fun hasCsrfHeader(session: IHTTPSession): Boolean = session.headers["x-requested-with"] != null
+
 fun errorResponse(error: StorageError): Response =
     newFixedLengthResponse(statusFor(error), JSON_MIME, """{"ok":false,"error":"${error.code}"}""")
 

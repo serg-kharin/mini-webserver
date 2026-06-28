@@ -46,6 +46,8 @@
     "mkdir_failed": "Could not create folder",
     "delete_no_name": "No file specified",
     "delete_failed": "Could not delete",
+    "upload_too_large": "File is too large",
+    "forbidden": "Request rejected",
     "unknown": "An error occurred"
   }
 }

@@ -1,10 +1,13 @@
 package dev.sergei.miniwebserver.server
 
+import android.util.Log
 import dev.sergei.miniwebserver.core.DEFAULT_PORT
 import dev.sergei.miniwebserver.domain.model.StorageError
 import dev.sergei.miniwebserver.domain.model.StorageException
 import fi.iki.elonen.NanoHTTPD
 import javax.inject.Inject
+
+private const val TAG = "WebServer"
 
 class WebServer
     @Inject
@@ -17,10 +20,16 @@ class WebServer
 
         override fun serve(session: IHTTPSession): Response =
             try {
-                table[session.method to session.uri]?.handle(session) ?: assetServer.serve(session.uri)
+                val route = table[session.method to session.uri]
+                when {
+                    route == null -> assetServer.serve(session.uri)
+                    !hasCsrfHeader(session) -> forbiddenResponse()
+                    else -> route.handle(session)
+                }
             } catch (e: StorageException) {
                 errorResponse(e.error)
             } catch (e: Exception) {
+                Log.e(TAG, "Request failed: ${session.method} ${session.uri}", e)
                 errorResponse(StorageError.UNKNOWN)
             }
     }

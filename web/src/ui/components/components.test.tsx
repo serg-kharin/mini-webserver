@@ -46,6 +46,13 @@ describe('NewFolder', () => {
     fireEvent.click(screen.getByText('Create folder'))
     expect(onCreate).toHaveBeenCalledWith('Album')
   })
+
+  it('ignores a blank submit', () => {
+    const onCreate = vi.fn()
+    render(<NewFolder onCreate={onCreate} disabled={false} />)
+    fireEvent.submit(screen.getByRole('textbox').closest('form') as HTMLFormElement)
+    expect(onCreate).not.toHaveBeenCalled()
+  })
 })
 
 describe('Breadcrumbs', () => {
@@ -137,6 +144,24 @@ describe('EntryList', () => {
       />,
     )
     fireEvent.click(screen.getByText('a.flac'))
+    expect(onOpenResult).toHaveBeenCalled()
+  })
+
+  it('renders a folder search result', () => {
+    const onOpenResult = vi.fn()
+    render(
+      <EntryList
+        loading={false}
+        listing={{ dirs: [], files: [] }}
+        results={[{ name: 'Album', path: '', dir: true, size: 0 }]}
+        path={[]}
+        onOpenDir={vi.fn()}
+        onUp={vi.fn()}
+        onDelete={vi.fn()}
+        onOpenResult={onOpenResult}
+      />,
+    )
+    fireEvent.click(screen.getByText(/Album/))
     expect(onOpenResult).toHaveBeenCalled()
   })
 

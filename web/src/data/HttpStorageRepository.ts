@@ -19,6 +19,9 @@ const Param = {
   query: 'q',
 } as const
 
+// Custom header the server requires; blocks cross-site (no-cors/form) requests.
+const REQUEST_HEADERS = { 'X-Requested-With': 'fetch' }
+
 interface FolderDto {
   id: string
   name: string
@@ -49,14 +52,14 @@ export default class HttpStorageRepository implements StorageRepository {
   }
 
   async getFolders(): Promise<Folder[]> {
-    const r = await fetch(this.url(Endpoint.folders))
+    const r = await fetch(this.url(Endpoint.folders), { headers: REQUEST_HEADERS })
     if (!r.ok) return []
     const data = (await r.json()) as FolderDto[]
     return data.map((f) => ({ id: f.id, name: f.name, storage: toStorageKind(f.storage) }))
   }
 
   async list(folderId: string, path: string[]): Promise<DirListing> {
-    const r = await fetch(this.url(Endpoint.list, locate(folderId, path)))
+    const r = await fetch(this.url(Endpoint.list, locate(folderId, path)), { headers: REQUEST_HEADERS })
     if (!r.ok) return { dirs: [], files: [] }
     const d = (await r.json()) as ListingDto
     return {
@@ -68,6 +71,7 @@ export default class HttpStorageRepository implements StorageRepository {
   async search(folderId: string, query: string): Promise<SearchHit[]> {
     const r = await fetch(
       this.url(Endpoint.search, { [Param.folder]: folderId, [Param.query]: query }),
+      { headers: REQUEST_HEADERS },
     )
     if (!r.ok) return []
     const data = (await r.json()) as SearchHitDto[]
@@ -94,6 +98,7 @@ export default class HttpStorageRepository implements StorageRepository {
         'POST',
         this.url(Endpoint.upload, { ...locate(folderId, path), [Param.name]: file.name }),
       )
+      xhr.setRequestHeader('X-Requested-With', 'fetch')
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total)
       }
@@ -114,7 +119,7 @@ export default class HttpStorageRepository implements StorageRepository {
 
   private async post(url: string): Promise<ActionResult> {
     try {
-      const r = await fetch(url, { method: 'POST' })
+      const r = await fetch(url, { method: 'POST', headers: REQUEST_HEADERS })
       return toResult(r.status, await r.text())
     } catch {
       return { ok: false, error: UNKNOWN_ERROR }

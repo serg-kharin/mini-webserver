@@ -1,5 +1,6 @@
 package dev.sergei.miniwebserver.service
 
+import android.annotation.SuppressLint
 import android.app.Service
 import android.content.Intent
 import android.content.pm.ServiceInfo
@@ -51,6 +52,9 @@ class HttpService : Service() {
         super.onDestroy()
     }
 
+    // Held for the whole server lifetime and released in onDestroy; if the process
+    // is killed the OS frees the partial wake lock anyway, so no timeout is needed.
+    @SuppressLint("WakelockTimeout")
     private fun acquireWakeLock(): PowerManager.WakeLock =
         getSystemService(PowerManager::class.java)
             .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKELOCK_TAG)

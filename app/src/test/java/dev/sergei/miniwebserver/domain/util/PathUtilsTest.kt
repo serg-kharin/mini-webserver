@@ -18,4 +18,9 @@ class PathUtilsTest {
     fun nullIsEmpty() {
         assertEquals(emptyList<String>(), splitPath(null))
     }
+
+    @Test
+    fun dropsTraversalSegments() {
+        assertEquals(listOf("ok"), splitPath("../ok/./.."))
+    }
 }

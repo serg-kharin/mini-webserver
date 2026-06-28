@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { useFolderBrowser } from '@/ui/hooks/useFolderBrowser'
 import { UseCasesProvider } from '@/app/UseCasesContext'
 import type { UseCases } from '@/app/container'
+import type { DirListing, SearchHit } from '@/domain/models/types'
 import { fakeUseCases } from '@/test/fakes'
 
 function setup(useCases: UseCases = fakeUseCases()) {
@@ -69,6 +70,48 @@ describe('useFolderBrowser', () => {
     act(() => result.current.setQuery('a'))
     await waitFor(() => expect(result.current.results).toBeNull())
     expect(result.current.listing).toEqual({ dirs: [], files: [] })
+  })
+
+  it('ignores a stale listing response', async () => {
+    let resolveStale: (value: DirListing) => void = () => {}
+    const stale = new Promise<DirListing>((resolve) => {
+      resolveStale = resolve
+    })
+    let calls = 0
+    const listDirectory = vi.fn(() => {
+      calls += 1
+      return calls === 1 ? stale : Promise.resolve({ dirs: ['fresh'], files: [] })
+    })
+    const { result } = setup(fakeUseCases({ listDirectory }))
+    await waitFor(() => expect(result.current.folderId).toBe('t'))
+    act(() => result.current.openDir('X'))
+    await waitFor(() => expect(result.current.listing.dirs).toEqual(['fresh']))
+    await act(async () => {
+      resolveStale({ dirs: ['stale'], files: [] })
+    })
+    expect(result.current.listing.dirs).toEqual(['fresh'])
+  })
+
+  it('ignores a stale search response', async () => {
+    let resolveStale: (value: SearchHit[]) => void = () => {}
+    const stale = new Promise<SearchHit[]>((resolve) => {
+      resolveStale = resolve
+    })
+    let calls = 0
+    const searchCatalog = vi.fn(() => {
+      calls += 1
+      return calls === 1 ? stale : Promise.resolve([{ name: 'fresh', path: '', dir: false, size: 1 }])
+    })
+    const { result } = setup(fakeUseCases({ searchCatalog }))
+    await waitFor(() => expect(result.current.folderId).toBe('t'))
+    act(() => result.current.setQuery('a'))
+    await new Promise((r) => setTimeout(r, 300))
+    act(() => result.current.setQuery('ab'))
+    await waitFor(() => expect(result.current.results?.[0]?.name).toBe('fresh'), { timeout: 1000 })
+    await act(async () => {
+      resolveStale([{ name: 'stale', path: '', dir: false, size: 0 }])
+    })
+    expect(result.current.results?.[0]?.name).toBe('fresh')
   })
 
   it('deletes a file', async () => {

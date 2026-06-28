@@ -5,12 +5,13 @@
     <ID>MagicNumber:FolderViews.kt$0.6f</ID>
     <ID>MagicNumber:SafSearch.kt$3</ID>
     <ID>MaxLineLength:FoldersRoute.kt$FoldersRoute$override fun handle(session: IHTTPSession): Response</ID>
+    <ID>MaxLineLength:PathUtils.kt$fun</ID>
+    <ID>MaxLineLength:Responses.kt$fun forbiddenResponse(): Response</ID>
     <ID>MaxLineLength:SafStorageRepository.kt$SafStorageRepository$override fun addFolder(folderId: String)</ID>
     <ID>NestedBlockDepth:SafSearch.kt$fun searchTree( context: Context, folderId: String, query: String, maxResults: Int, maxDirs: Int, ): List&lt;SearchHit&gt;</ID>
     <ID>ReturnCount:Responses.kt$fun queryParam( session: IHTTPSession, key: String, ): String?</ID>
     <ID>ReturnCount:SafResolver.kt$fun resolveDir( context: Context, folderId: String, path: List&lt;String&gt;, ): DocumentFile?</ID>
     <ID>SwallowedException:AssetServer.kt$AssetServer$e: IOException</ID>
-    <ID>SwallowedException:WebServer.kt$WebServer$e: Exception</ID>
     <ID>TooGenericExceptionCaught:WebServer.kt$WebServer$e: Exception</ID>
   </CurrentIssues>
 </SmellBaseline>

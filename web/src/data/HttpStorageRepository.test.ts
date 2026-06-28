@@ -33,7 +33,7 @@ describe('HttpStorageRepository', () => {
   it('encodes folder and path in the list URL', async () => {
     const fetchMock = mockFetch({ ok: true, json: async () => ({ dirs: ['A'], files: [{ name: 'x', size: 1 }] }) })
     const listing = await repo.list('tree:internal', ['Artist', 'Album'])
-    expect(fetchMock).toHaveBeenCalledWith('/api/list?folder=tree%3Ainternal&path=Artist%2FAlbum')
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/list?folder=tree%3Ainternal&path=Artist%2FAlbum')
     expect(listing.dirs).toEqual(['A'])
   })
 
@@ -47,6 +47,16 @@ describe('HttpStorageRepository', () => {
     mockFetch({ ok: false })
     expect(await repo.list('f', [])).toEqual({ dirs: [], files: [] })
     expect(await repo.search('f', 'x')).toEqual([])
+  })
+
+  it('handles a listing without dirs or files', async () => {
+    mockFetch({ ok: true, json: async () => ({}) })
+    expect(await repo.list('f', [])).toEqual({ dirs: [], files: [] })
+  })
+
+  it('returns ok on a successful action', async () => {
+    mockFetch({ ok: true, status: 200, text: async () => '{"ok":true}' })
+    expect(await repo.createDirectory('t', [], 'New')).toEqual({ ok: true, error: undefined })
   })
 
   it('returns the server error code on a failed action', async () => {
@@ -68,6 +78,7 @@ describe('HttpStorageRepository.uploadFile', () => {
     onload: (() => void) | null = null
     onerror: (() => void) | null = null
     open() {}
+    setRequestHeader() {}
     send() {
       this.onload?.()
     }
@@ -87,6 +98,7 @@ describe('HttpStorageRepository.uploadFile', () => {
       onload: (() => void) | null = null
       onerror: (() => void) | null = null
       open() {}
+      setRequestHeader() {}
       send() {
         this.onerror?.()
       }

@@ -8,6 +8,7 @@ enum class StorageError(val code: String) {
     MKDIR_FAILED("mkdir_failed"),
     DELETE_NO_NAME("delete_no_name"),
     DELETE_FAILED("delete_failed"),
+    UPLOAD_TOO_LARGE("upload_too_large"),
     UNKNOWN("unknown"),
 }
 

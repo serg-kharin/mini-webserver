@@ -15,6 +15,8 @@ import java.io.File
 import java.io.FileInputStream
 import javax.inject.Inject
 
+private const val MAX_UPLOAD_BYTES = 4L * 1024 * 1024 * 1024
+
 class UploadRoute
     @Inject
     constructor(
@@ -24,6 +26,10 @@ class UploadRoute
         override val path = "/api/upload"
 
         override fun handle(session: IHTTPSession): Response {
+            val declared = session.headers["content-length"]?.toLongOrNull()
+            if (declared != null && declared > MAX_UPLOAD_BYTES) {
+                throw StorageException(StorageError.UPLOAD_TOO_LARGE)
+            }
             val parts = HashMap<String, String>()
             session.parseBody(parts)
             val tempPath = parts["file"] ?: throw StorageException(StorageError.NO_FILE)
